@@ -1,0 +1,40 @@
+.
+├── App.tsx
+├── QRCodeScannerScreen.tsx
+├── app.json
+├── assets
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   ├── logo.png
+│   └── splash.png
+├── babel.config.js
+├── components
+│   ├── ExpenseCard.tsx
+│   ├── LoginButton.tsx
+│   ├── ResidentCard.tsx
+│   └── ResidentDetailsModal.tsx
+├── env.d.ts
+├── package-lock.json
+├── package.json
+├── screen
+│   ├── LoginScreen.tsx
+│   ├── SecurityHomeScreen.tsx
+│   ├── admin
+│   │   ├── AdminHomeScreen.tsx
+│   │   ├── AnnouncementScreen.tsx
+│   │   ├── ExpenseDetailsScreen.tsx
+│   │   ├── ManageUsersScreen.tsx
+│   │   └── SendNotificationScreen.tsx
+│   └── resident
+│       ├── AidatPaymentScreen.tsx
+│       ├── EmergencyReportScreen.tsx
+│       ├── ReportIssueScreen.tsx
+│       ├── ResidentHomeScreen.tsx
+│       └── VisitorManagementScreen.tsx
+├── tree.txt
+├── tsconfig.json
+├── types.ts
+└── yarn.lock
+
+6 directories, 32 files
