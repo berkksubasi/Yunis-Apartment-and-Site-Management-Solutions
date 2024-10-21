@@ -1,6 +1,16 @@
 .
 ├── App.tsx
 ├── QRCodeScannerScreen.tsx
+├── README.md
+├── api
+│   ├── createUser.js
+│   ├── models
+│   │   └── User.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── routes
+│   │   └── user.js
+│   └── server.js
 ├── app.json
 ├── assets
 │   ├── adaptive-icon.png
@@ -37,4 +47,4 @@
 ├── types.ts
 └── yarn.lock
 
-6 directories, 32 files
+9 directories, 39 files

@@ -6,6 +6,7 @@ import { RootStackParamList } from '../../types';
 interface AdminHomeScreenProps {
   name: string; 
 }
+
 export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ name }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   return (
