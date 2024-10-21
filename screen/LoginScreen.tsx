@@ -15,8 +15,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ setUserType }) => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      // Prod ortamındaki sunucunuza bağlanacak URL'yi kullanın
-      const response = await fetch('https://api.yourdomain.com/api/login', { // Gerçek prod API URL'nizi buraya koyun
+      // Prod ortamındaki Vercel API URL'sini kullanın
+      const response = await fetch('https://yunis-apartment-and-site-management-solutions.vercel.app/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

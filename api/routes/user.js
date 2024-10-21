@@ -1,46 +1,45 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
+const { MongoClient } = require('mongodb');
 
-//REGISTER
-router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
-  try {
-    const user = new User({ name, email, password, role });
-    await user.save();
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+const client = new MongoClient(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 });
 
-//LOGIN
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    if (req.url.endsWith('/register')) {
+      // REGISTER
+      const { name, email, password, role } = req.body;
+      try {
+        await client.connect();
+        const db = client.db('mydatabase');
+        const users = db.collection('users');
 
-  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    return res.json({ userType: 'admin' });
-  } else if (username === process.env.RESIDENT_USERNAME && password === process.env.RESIDENT_PASSWORD) {
-    return res.json({ userType: 'resident' });
-  } else if (username === process.env.SECURITY_USERNAME && password === process.env.SECURITY_PASSWORD) {
-    return res.json({ userType: 'security' });
+        const newUser = { name, email, password, role };
+        const result = await users.insertOne(newUser);
+        res.status(201).json(result.ops[0]);
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    } else if (req.url.endsWith('/login')) {
+
+
+      // LOGIN
+      const { username, password } = req.body;
+
+      if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+        return res.json({ userType: 'admin' });
+      } else if (username === process.env.RESIDENT_USERNAME && password === process.env.RESIDENT_PASSWORD) {
+        return res.json({ userType: 'resident' });
+      } else if (username === process.env.SECURITY_USERNAME && password === process.env.SECURITY_PASSWORD) {
+        return res.json({ userType: 'security' });
+      } else {
+        return res.status(401).json({ message: 'Hatalı kullanıcı adı veya şifre' });
+      }
+    } else {
+      res.status(405).json({ message: 'Method not allowed' });
+    }
   } else {
-    return res.status(401).json({ message: 'Hatalı kullanıcı adı veya şifre' });
+    res.status(405).json({ message: 'Method not allowed' });
   }
-});
-
-//DELETE
-// router.delete('/:id', async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const user = await User.findByIdAndDelete(id);
-//     if (!user) {
-//       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
-//     }
-//     res.status(200).json(user);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
-module.exports = router;
+}
