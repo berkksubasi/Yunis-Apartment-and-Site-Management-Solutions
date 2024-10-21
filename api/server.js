@@ -1,18 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const userRoutes = require('./routes/user'); 
+const cors = require('cors');
+const userRoutes = require('./routes/user');
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors()); 
 
-mongoose.connect(process.env.MONGODB_URI)
+
+mongoose
+  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB bağlantısı başarılı'))
-  .catch(err => console.log(err));
+  .catch((err) => console.log('MongoDB bağlantı hatası:', err));
 
-app.use('/api/users', userRoutes); 
+// Kullanıcı rotalarını ekleyin
+app.use('/api', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend çalışıyor');

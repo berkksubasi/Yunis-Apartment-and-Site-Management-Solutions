@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
+import { View, TextInput, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginButton } from '../components/LoginButton';
-import { View, TextInput, StyleSheet, Alert, Image } from 'react-native';
-import { ADMIN_PASSWORD, ADMIN_USERNAME, RESIDENT_PASSWORD, RESIDENT_USERNAME, SECURITY_PASSWORD, SECURITY_USERNAME } from '@env';
-
 
 interface LoginScreenProps {
   setUserType: (userType: 'admin' | 'resident' | 'security') => void;
@@ -11,27 +10,53 @@ interface LoginScreenProps {
 export const LoginScreen: React.FC<LoginScreenProps> = ({ setUserType }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Çevresel değişkenler ile kullanıcı doğrulama
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      setUserType('admin'); // Admin olarak giriş yap
-    } else if (username === RESIDENT_USERNAME && password === RESIDENT_PASSWORD) {
-      setUserType('resident'); // Resident (sakin) olarak giriş yap
-    } else if (username === SECURITY_USERNAME && password === SECURITY_PASSWORD) {
-      setUserType('security'); // Güvenlik olarak giriş yap
-    } else {
-      Alert.alert('Hatalı giriş', 'Lütfen geçerli bir kullanıcı adı ve şifre girin.');
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      // Prod ortamındaki sunucunuza bağlanacak URL'yi kullanın
+      const response = await fetch('https://api.yourdomain.com/api/login', { // Gerçek prod API URL'nizi buraya koyun
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (response.ok) {
+        if (data.token) {
+          await AsyncStorage.setItem('authToken', data.token);
+        }
+
+        switch (data.userType) {
+          case 'admin':
+            setUserType('admin');
+            break;
+          case 'resident':
+            setUserType('resident');
+            break;
+          case 'security':
+            setUserType('security');
+            break;
+          default:
+            Alert.alert('Hatalı giriş', 'Kullanıcı tipi tanınmadı.');
+        }
+      } else {
+        Alert.alert('Hatalı giriş', data.message || 'Giriş başarısız.');
+      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Bağlantı hatası', 'Sunucuya ulaşılamıyor.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.overlay} />
-      <Image 
-        source={require('../assets/logo.png')} 
-        style={styles.logo} 
-      />
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
       <TextInput
         style={styles.input}
         placeholder="Kullanıcı Adı"
@@ -48,7 +73,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ setUserType }) => {
         placeholderTextColor="#8A8A8A"
       />
       <View style={styles.buttonContainer}>
-        <LoginButton title="Giriş Yap" onPress={handleLogin} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        ) : (
+          <LoginButton title="Giriş Yap" onPress={handleLogin} />
+        )}
       </View>
     </View>
   );
@@ -62,16 +91,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
     alignItems: 'center',
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.06)', 
-  },
   logo: {
     width: 400,
     height: 200,
     marginBottom: 20,
     alignSelf: 'center',
-    justifyContent: 'center',
     resizeMode: 'contain',
     shadowColor: 'gold',
     shadowOffset: { width: 0, height: 2 },

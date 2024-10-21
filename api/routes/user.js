@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
-// Yeni kullanıcı ekleme
+//REGISTER
 router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
   try {
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password, role });
     await user.save();
     res.status(201).json(user);
   } catch (err) {
@@ -14,8 +14,8 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Giriş işlemi
-router.post('/api/login', (req, res) => {
+//LOGIN
+router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
@@ -28,5 +28,19 @@ router.post('/api/login', (req, res) => {
     return res.status(401).json({ message: 'Hatalı kullanıcı adı veya şifre' });
   }
 });
+
+//DELETE
+// router.delete('/:id', async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const user = await User.findByIdAndDelete(id);
+//     if (!user) {
+//       return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+//     }
+//     res.status(200).json(user);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 module.exports = router;
