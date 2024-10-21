@@ -1,34 +1,3 @@
-# Yunis Site Yönetim Çözümleri - Proje Aşamaları
-
-## Faz 1: Proje Tanımlama ve Altyapı
-- Proje gereksinimlerinin belirlenmesi.
-- **Frontend**: React Native (Expo) kurulumu.
-- **Backend**: Node.js + Express ile API kurulumu.
-- **Veritabanı**: MongoDB entegrasyonu.
-- **Authentication**: JWT ile kullanıcı doğrulama.
-
-## Faz 2: Panellerin Geliştirilmesi
-- **Admin Paneli**: Kullanıcı ve ziyaretçi yönetimi, duyuru ve aidat takibi.
-- **Resident Paneli**: Aidat ödeme, ziyaretçi yönetimi ve sorun bildirme.
-- **Security Paneli**: QR kod ile ziyaretçi giriş-çıkış takibi.
-
-## Faz 3: Ödeme Sistemleri ve Bildirimler
-- **Ödeme Entegrasyonu**: Stripe/PayTR API ile aidat ödeme entegrasyonu.
-- **Bildirimler**: Socket.io ile gerçek zamanlı bildirimler.
-- **SMS Bildirimleri**: Twilio ile SMS tabanlı acil durum bildirimleri.
-
-## Faz 4: İleri Özelliklerin Eklenmesi
-- **Ziyaretçi Yönetimi**: QR kod ile ziyaretçi giriş çıkış kontrolü.
-- **Duyuru ve Anketler**: Sakinler için anket ve duyuru sisteminin eklenmesi.
-- **Bakım ve Onarım Talepleri**: Bakım taleplerinin izlenmesi ve yönetilmesi.
-
-## Faz 5: Test, Optimizasyon ve Yayın
-- **Testler**: Fonksiyonel ve performans testlerinin yapılması.
-- **Optimizasyon**: Uygulamanın hız ve performans iyileştirmeleri.
-- **Yayınlama**: Uygulamanın son halinin mobil ve web platformları için yayınlanması.
-
----
-
 # Yunis Apartment and Site Management Solutions - Project Phases
 
 ## Phase 1: Project Setup and Infrastructure
@@ -57,3 +26,33 @@
 - **Testing**: Conducting functional and performance tests.
 - **Optimization**: Enhancing speed and performance of the app.
 - **Deployment**: Publishing the final version for mobile and web platforms.
+
+---
+# Yunis Site Yönetim Çözümleri - Proje Aşamaları
+
+## Faz 1: Proje Tanımlama ve Altyapı
+- Proje gereksinimlerinin belirlenmesi.
+- **Frontend**: React Native (Expo) kurulumu.
+- **Backend**: Node.js + Express ile API kurulumu.
+- **Veritabanı**: MongoDB entegrasyonu.
+- **Authentication**: JWT ile kullanıcı doğrulama.
+
+## Faz 2: Panellerin Geliştirilmesi
+- **Admin Paneli**: Kullanıcı ve ziyaretçi yönetimi, duyuru ve aidat takibi.
+- **Resident Paneli**: Aidat ödeme, ziyaretçi yönetimi ve sorun bildirme.
+- **Security Paneli**: QR kod ile ziyaretçi giriş-çıkış takibi.
+
+## Faz 3: Ödeme Sistemleri ve Bildirimler
+- **Ödeme Entegrasyonu**: Stripe/PayTR API ile aidat ödeme entegrasyonu.
+- **Bildirimler**: Socket.io ile gerçek zamanlı bildirimler.
+- **SMS Bildirimleri**: Twilio ile SMS tabanlı acil durum bildirimleri.
+
+## Faz 4: İleri Özelliklerin Eklenmesi
+- **Ziyaretçi Yönetimi**: QR kod ile ziyaretçi giriş çıkış kontrolü.
+- **Duyuru ve Anketler**: Sakinler için anket ve duyuru sisteminin eklenmesi.
+- **Bakım ve Onarım Talepleri**: Bakım taleplerinin izlenmesi ve yönetilmesi.
+
+## Faz 5: Test, Optimizasyon ve Yayın
+- **Testler**: Fonksiyonel ve performans testlerinin yapılması.
+- **Optimizasyon**: Uygulamanın hız ve performans iyileştirmeleri.
+- **Yayınlama**: Uygulamanın son halinin mobil ve web platformları için yayınlanması.
