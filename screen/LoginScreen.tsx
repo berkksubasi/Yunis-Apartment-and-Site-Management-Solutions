@@ -2,55 +2,83 @@ import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginButton } from '../components/LoginButton';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types';
 
 interface LoginScreenProps {
-  setUserType: (userType: 'admin' | 'resident' | 'security') => void;
+  setrole: (role: 'admin' | 'resident' | 'security') => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ setUserType }) => {
-  const [username, setUsername] = useState('');
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+
+export const LoginScreen: React.FC<LoginScreenProps> = ({ setrole }) => {
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
     setLoading(true);
+
+    if (!usernameOrEmail || !password) {
+      Alert.alert('Hata', 'Kullanıcı adı veya e-posta ve şifre gereklidir.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Prod ortamındaki Vercel API URL'sini kullanın
-      const response = await fetch('https://yunis-apartment-and-site-management-solutions.vercel.app/api/login', {
+      const isResident = !usernameOrEmail.includes('@'); // '@' içermiyorsa resident için username kullanılıyor
+
+      const loginEndpoint = isResident
+        ? 'https://yunis-api.vercel.app/api/residents/login'
+        : 'https://yunis-api.vercel.app/api/login'; // admin ve diğer kullanıcılar için email kullanarak giriş yapılacak
+
+      const requestBody = isResident
+        ? { username: usernameOrEmail, password }
+        : { email: usernameOrEmail, password };
+
+      const response = await fetch(loginEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
-      setLoading(false);
 
       if (response.ok) {
-        if (data.token) {
-          await AsyncStorage.setItem('authToken', data.token);
-        }
+        const role = data.role || data.resident?.role;
+        const residentId = data.resident?._id; // resident ID'yi buradan alıyoruz
 
-        switch (data.userType) {
-          case 'admin':
-            setUserType('admin');
-            break;
-          case 'resident':
-            setUserType('resident');
-            break;
-          case 'security':
-            setUserType('security');
-            break;
-          default:
-            Alert.alert('Hatalı giriş', 'Kullanıcı tipi tanınmadı.');
+        if (role) {
+          await AsyncStorage.setItem('role', role);
+          if (residentId) {
+            await AsyncStorage.setItem('residentId', residentId); // Resident ID'yi kaydediyoruz
+          }
+          setrole(role);
+
+          if (role === 'resident') {
+            navigation.navigate('ResidentHome');
+          } else if (role === 'admin') {
+            navigation.navigate('AdminHome');
+          } else if (role === 'security') {
+            navigation.navigate('SecurityHome');
+          }
+        } else {
+          console.error('Sunucudan beklenmeyen yanıt alındı:', data);
+          Alert.alert('Hata', 'Sunucudan beklenmeyen yanıt alındı.');
         }
       } else {
+        console.error('Hatalı giriş:', data.message || 'Giriş başarısız.');
         Alert.alert('Hatalı giriş', data.message || 'Giriş başarısız.');
       }
     } catch (error) {
-      setLoading(false);
+      console.error('Bağlantı hatası:', error);
       Alert.alert('Bağlantı hatası', 'Sunucuya ulaşılamıyor.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,9 +87,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ setUserType }) => {
       <Image source={require('../assets/logo.png')} style={styles.logo} />
       <TextInput
         style={styles.input}
-        placeholder="Kullanıcı Adı"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Kullanıcı Adı veya E-posta"
+        value={usernameOrEmail}
+        onChangeText={setUsernameOrEmail}
         placeholderTextColor="#8A8A8A"
       />
       <TextInput
@@ -97,9 +125,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignSelf: 'center',
     resizeMode: 'contain',
-    shadowColor: 'gold',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
   },
   input: {
     height: 50,

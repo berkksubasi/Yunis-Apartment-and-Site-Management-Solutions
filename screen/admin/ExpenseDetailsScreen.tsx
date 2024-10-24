@@ -6,55 +6,47 @@ import { ExpenseCard } from '../../components/ExpenseCard';
 import { ResidentDetailsModal } from '../../components/ResidentDetailsModal';
 
 export const ExpenseDetailsScreen = () => {
-  const [residents, setResidents] = useState<Resident[]>([
-    {
-      id: '1',
-      firstName: 'Ahmet',
-      lastName: 'Yılmaz',
-      block: 'A',
-      siteName: 'Aytur Sitesi',
-      apartmentNumber: 12,
-      contactNumber: '05001112233',
-      amountDue: 300,
-      hasPaid: false,
-      dueDate: '2024-02-01',
-    },
-    {
-      id: '2',
-      firstName: 'Ayşe',
-      lastName: 'Demir',
-      block: 'B',
-      siteName: 'Aytur Sitesi',
-      apartmentNumber: 8,
-      contactNumber: '05002223344',
-      amountDue: 300,
-      hasPaid: true,
-      dueDate: '2024-01-15',
-    },
-    {
-      id: '3',
-      firstName: 'Mehmet',
-      lastName: 'Kaya',
-      block: 'C',
-      siteName: 'Aytur Sitesi',
-      apartmentNumber: 20,
-      contactNumber: '05003334455',
-      amountDue: 300,
-      hasPaid: false,
-      dueDate: '2024-02-10',
-    },
-  ]);
-
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id: '1', description: 'Asansör Bakım', amount: 500, date: '2024-01-01' },
-    { id: '2', description: 'Temizlik Gideri', amount: 200, date: '2024-01-10' },
-    { id: '3', description: 'Güvenlik Sistemi Bakım', amount: 700, date: '2024-02-15' },
-  ]);
-
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [totalPaid, setTotalPaid] = useState(0); // Ödenen aidatların toplamı
-  const [totalUnpaid, setTotalUnpaid] = useState(0); // Ödenmeyen aidatların toplamı
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [totalUnpaid, setTotalUnpaid] = useState(0);
+
+  useEffect(() => {
+    fetchResidents();
+    fetchExpenses();
+  }, []);
+
+  const fetchResidents = async () => {
+    try {
+      const response = await fetch('https://yunis-api.vercel.app/api/residents');
+      if (!response.ok) {
+        console.log("Sakinler yüklenirken API hata döndü", await response.text());
+        throw new Error("API yanıtı başarısız");
+      }
+      const data = await response.json();
+      setResidents(data);
+    } catch (error) {
+      console.error('Sakinler yüklenirken hata:', error);
+      Alert.alert('Hata', 'Sakinler yüklenirken bir hata oluştu.');
+    }
+  };
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await fetch('https://yunis-api.vercel.app/api/expenses');
+      if (!response.ok) {
+        console.log("Giderler yüklenirken API hata döndü", await response.text());
+        throw new Error("API yanıtı başarısız");
+      }
+      const data = await response.json();
+      setExpenses(data);
+    } catch (error) {
+      console.error('Giderler yüklenirken hata:', error);
+      Alert.alert('Hata', 'Giderler yüklenirken bir hata oluştu.');
+    }
+  };
 
   useEffect(() => {
     calculateTotals();
@@ -92,8 +84,20 @@ export const ExpenseDetailsScreen = () => {
     );
   };
 
-  const sendPaymentReminder = (resident: Resident) => {
-    Alert.alert('Hatırlatma Gönderildi', `${resident.firstName} ${resident.lastName} için aidat hatırlatması gönderildi.`);
+  const sendPaymentReminder = async (resident: Resident) => {
+    try {
+      const response = await fetch(`https://yunis-api.vercel.app/api/residents/${resident.id}/reminder`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        Alert.alert('Hatırlatma Gönderildi', `${resident.firstName} ${resident.lastName} için aidat hatırlatması gönderildi.`);
+      } else {
+        Alert.alert('Hata', 'Hatırlatma gönderilirken bir hata oluştu.');
+      }
+    } catch (error) {
+      Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamadı.');
+    }
   };
 
   const sendBulkReminders = () => {
@@ -124,11 +128,14 @@ export const ExpenseDetailsScreen = () => {
       <View style={styles.container}>
         <Text style={styles.title}>Aidat ve Gider Detayları</Text>
 
-        {/* Ödenen ve Ödenmeyen Aidatlar */}
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryText}>Toplam Ödenen Aidat: <Text style={styles.paidAmount}>{totalPaid} ₺</Text></Text>
           <Text style={styles.summaryText}>Toplam Ödenmeyen Aidat: <Text style={styles.unpaidAmount}>{totalUnpaid} ₺</Text></Text>
         </View>
+
+        <TouchableOpacity style={styles.unpaidButton} onPress={() => Alert.alert('Ödenmemiş Faturalar')}>
+          <Text style={styles.unpaidButtonText}>Ödenmemiş Faturalar</Text>
+        </TouchableOpacity>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Aidat Talep Durumu</Text>
@@ -136,13 +143,14 @@ export const ExpenseDetailsScreen = () => {
             data={residents}
             renderItem={({ item }) => (
               <ResidentCard
+                key={item._id}
                 resident={item}
                 onRequestPayment={requestPaymentReminder}
                 onShowDetails={showResidentDetails}
                 onCall={() => Alert.alert('Aranıyor', `${item.contactNumber}`)}
               />
             )}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item._id}
           />
         </View>
 
@@ -152,11 +160,15 @@ export const ExpenseDetailsScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Gider Detayları</Text>
-          <FlatList
-            data={expenses}
-            renderItem={({ item }) => <ExpenseCard expense={item} />}
-            keyExtractor={(item) => item.id}
-          />
+          {expenses.length === 0 ? (
+            <Text style={{ textAlign: 'center', marginVertical: 20 }}>Herhangi bir gider bulunmamaktadır.</Text>
+          ) : (
+            <FlatList
+              data={expenses}
+              renderItem={({ item }) => <ExpenseCard expense={item} />}
+              keyExtractor={(item) => item.id}
+            />
+          )}
         </View>
 
         <ResidentDetailsModal
@@ -211,6 +223,22 @@ const styles = StyleSheet.create({
   unpaidAmount: {
     color: 'red',
   },
+  unpaidButton: {
+    backgroundColor: '#FFD700',
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  unpaidButtonText: {
+    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   section: {
     marginBottom: 20,
   },
@@ -237,4 +265,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

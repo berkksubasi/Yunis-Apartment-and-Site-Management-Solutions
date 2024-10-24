@@ -3,8 +3,12 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Aler
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-export const AnnouncementScreen = ({ onAddAnnouncement }: { onAddAnnouncement: (announcement: any) => void }) => {
-  const [announcement, setAnnouncement] = useState('');
+interface AnnouncementScreenProps {
+  onAddAnnouncement: (announcement: string) => void; // Props tanımlıyoruz
+}
+
+export const AnnouncementScreen: React.FC<AnnouncementScreenProps> = ({ onAddAnnouncement }) => {
+  const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<{ name: string; uri: string } | null>(null);
   const [date, setDate] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -12,15 +16,9 @@ export const AnnouncementScreen = ({ onAddAnnouncement }: { onAddAnnouncement: (
 
   const handleFilePick = async () => {
     try {
-      const res = await DocumentPicker.getDocumentAsync({
-        type: '*/*', 
-      });
-
-      if (res.type === 'success') { 
-        setSelectedFile({
-          name: res.name || 'Seçilen dosya', 
-          uri: res.uri, 
-        });
+      const res = await DocumentPicker.getDocumentAsync({ type: '*/*' });
+      if (res.type === 'success') {
+        setSelectedFile({ name: res.name || 'Seçilen dosya', uri: res.uri });
       } else {
         console.log('İşlem iptal edildi.');
       }
@@ -29,36 +27,50 @@ export const AnnouncementScreen = ({ onAddAnnouncement }: { onAddAnnouncement: (
     }
   };
 
-  const handlePostAnnouncement = () => {
-    if (announcement.trim() === '') {
+  const handleSendAnnouncement = async () => {
+    if (message.trim() === '') {
       Alert.alert('Hata', 'Lütfen bir duyuru metni girin.');
       return;
     }
 
-    onAddAnnouncement({
-      text: announcement,
-      file: selectedFile,
-      date: date,
-      block: block,
-    });
+    // onAddAnnouncement prop'unu çağırıyoruz
+    onAddAnnouncement(message);
 
-    Alert.alert('Başarılı', 'Duyuru başarıyla gönderildi.');
-    setAnnouncement('');
-    setSelectedFile(null);
+    try {
+      const response = await fetch('https://yunis-api.vercel.app/api/announcements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          block,
+          scheduledAt: date.toISOString(),
+          mediaUrl: selectedFile?.uri || null,
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert('Başarılı', 'Duyuru başarıyla gönderildi!');
+        setMessage('');
+        setSelectedFile(null);
+      } else {
+        Alert.alert('Hata', 'Duyuru gönderilirken bir hata oluştu.');
+      }
+    } catch (error) {
+      Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamadı.');
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Image
-          source={require('../../assets/icon.png')}
-          style={styles.logo}
-        />
+        <Image source={require('../../assets/icon.png')} style={styles.logo} />
         <TextInput
           style={styles.input}
           placeholder="Duyuru metnini buraya yazın"
-          value={announcement}
-          onChangeText={setAnnouncement}
+          value={message}
+          onChangeText={setMessage}
           multiline
         />
 
@@ -79,9 +91,7 @@ export const AnnouncementScreen = ({ onAddAnnouncement }: { onAddAnnouncement: (
             display="default"
             onChange={(event, selectedDate) => {
               setShowDatePicker(false);
-              if (selectedDate) {
-                setDate(selectedDate);
-              }
+              if (selectedDate) setDate(selectedDate);
             }}
           />
         )}
@@ -93,7 +103,7 @@ export const AnnouncementScreen = ({ onAddAnnouncement }: { onAddAnnouncement: (
           onChangeText={setBlock}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handlePostAnnouncement}>
+        <TouchableOpacity style={styles.button} onPress={handleSendAnnouncement}>
           <Text style={styles.buttonText}>🔔 Duyuru Gönder</Text>
         </TouchableOpacity>
       </View>
@@ -118,10 +128,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     alignSelf: 'center',
     resizeMode: 'contain',
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   input: {
     width: '100%',
@@ -133,11 +139,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     backgroundColor: '#FAFAFA',
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 1,
   },
   fileButton: {
     width: '100%',
@@ -146,10 +147,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#1E88E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   dateButton: {
     width: '100%',
@@ -158,10 +155,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: 'gold',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   button: {
     width: '100%',
@@ -169,10 +162,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#6200EE',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   buttonText: {
     color: '#fff',
