@@ -15,10 +15,10 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
 
   // Kullanıcı adını AsyncStorage'dan çek
   useEffect(() => {
-
     console.log('useEffect çağrıldı, kullanıcı verileri alınıyor...');
     const getUserData = async () => {
       try {
+        // AsyncStorage'dan 'user' verisini al
         const userData = await AsyncStorage.getItem('user');
         console.log('AsyncStorage den dönen ham değer:', userData);
 
@@ -34,9 +34,10 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
           }
         } else {
           console.log('Kullanıcı verileri bulunamadı.');
-    const getUserData = async () => {
-      try {
-        const userData = await AsyncStorage.getItem('user');
+        }
+      } catch (error) {
+        console.error('Kullanıcı verileri alınamadı:', error);
+      }
     };
 
     getUserData();
