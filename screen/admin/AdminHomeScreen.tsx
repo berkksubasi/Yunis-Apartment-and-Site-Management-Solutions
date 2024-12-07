@@ -1,34 +1,116 @@
-import React from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
 
 interface AdminHomeScreenProps {
-  name: string; 
+  name: string;
 }
 
-export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ name }) => {
+export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
+  const [username, setUsername] = useState<string>(''); // Kullanıcı adını boş bir string olarak başlat
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  // Kullanıcı adını AsyncStorage'dan çek
+  useEffect(() => {
+    console.log('useEffect çağrıldı, kullanıcı verileri alınıyor...');
+    const getUserData = async () => {
+      try {
+        // AsyncStorage'dan 'user' verisini al
+        const userData = await AsyncStorage.getItem('user');
+        console.log('AsyncStorage den dönen ham değer:', userData);
+
+        if (userData) {
+          const user = JSON.parse(userData);
+          console.log('JSON parse sonrası kullanıcı verileri:', user);
+
+          if (user?.username) {
+            setUsername(user.username); // Kullanıcı adını ayarla
+            console.log('Kullanıcı adı ayarlandı:', user.username);
+          } else {
+            console.log('Kullanıcı adında bir hata var ya da eksik.');
+          }
+        } else {
+          console.log('Kullanıcı verileri bulunamadı.');
+        }
+      } catch (error) {
+        console.error('Kullanıcı verileri alınamadı:', error);
+      }
+    };
+
+    getUserData();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+      {/* Header bölümü, kullanıcıya hoşgeldiniz mesajı ve logo */}
+      <View style={styles.header}>
         <Image
           source={require('../../assets/icon.png')}
           style={styles.logo}
         />
-        <Text style={styles.title}>Merhaba {name}, Hoşgeldiniz!</Text> 
+        <Text style={styles.welcomeText}>
+          {username ? `Merhaba ${username}, Hoşgeldiniz!` : 'Merhaba, Hoşgeldiniz!'}
+        </Text>
       </View>
-      <View style={styles.container1}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ManageUsers')}>
+      {/* Ana işlem butonları bölümü */}
+      <View style={styles.container}>
+        {/* Kullanıcıları Yönet butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Kullanıcıları Yönet butonuna tıklandı');
+          navigation.navigate('ManageUsers');
+        }}>
+          <FontAwesome5 name="users-cog" size={24} color="white" />
           <Text style={styles.actionButtonText}>Kullanıcıları Yönet</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ExpenseDetails')}>
+        {/* Sakinleri Görüntüle butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Sakinleri Görüntüle butonuna tıklandı');
+          navigation.navigate('UserManagement');
+        }}>
+          <FontAwesome5 name="users" size={24} color="white" />
+          <Text style={styles.actionButtonText}>Sakinleri Görüntüle</Text>
+        </TouchableOpacity>
+        {/* Aidat ve Gider Detayları butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Aidat ve Gider Detayları butonuna tıklandı');
+          navigation.navigate('ExpenseDetails');
+        }}>
+          <MaterialIcons name="account-balance" size={24} color="white" />
           <Text style={styles.actionButtonText}>Aidat ve Gider Detayları</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Announcement')}>
+        {/* Banka Hareketleri butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Banka Hareketleri butonuna tıklandı');
+          navigation.navigate('BankTransactions');
+        }}>
+          <MaterialIcons name="account-balance-wallet" size={24} color="white" />
+          <Text style={styles.actionButtonText}>Banka Hareketleri</Text>
+        </TouchableOpacity>
+        {/* Duyuru Yap butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Duyuru Yap butonuna tıklandı');
+          navigation.navigate('Announcement');
+        }}>
+          <MaterialIcons name="announcement" size={24} color="white" />
           <Text style={styles.actionButtonText}>Duyuru Yap</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('QRCodeScanner')}>
+        {/* Görev Takip butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('Görev Takip butonuna tıklandı');
+          navigation.navigate('TaskTracking');
+        }}>
+          <MaterialIcons name="assignment" size={24} color="white" />
+          <Text style={styles.actionButtonText}>Görev Takip</Text>
+        </TouchableOpacity>
+        {/* QR Kod ile Ziyaretçi Girişi butonu */}
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+          console.log('QR Kod ile Ziyaretçi Girişi butonuna tıklandı');
+          navigation.navigate('QRCodeScanner');
+        }}>
+          <MaterialIcons name="qr-code-scanner" size={24} color="white" />
           <Text style={styles.actionButtonText}>QR Kod ile Ziyaretçi Girişi</Text>
         </TouchableOpacity>
       </View>
@@ -36,55 +118,51 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = ({ name }) => {
   );
 };
 
+// Stil dosyaları, SafeAreaView ve butonlar için gerekli stiller
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white',
   },
-  container: {
-    flex: 1,
+  header: {
     backgroundColor: 'white',
     padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  container1: {
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+    resizeMode: 'contain',
+  },
+  welcomeText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
+    textAlign: 'center',
+  },
+  container: {
     flex: 1,
     padding: 20,
     justifyContent: 'center',
   },
-  logo: {
-    width: 300,
-    height: 300,
-    marginTop: 20,
-    marginBottom: 10,
-    resizeMode: 'contain',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
-    color: 'black',
-  },
   actionButton: {
-    backgroundColor: '#1E88E5',
+    backgroundColor: 'gold',
     paddingVertical: 15,
-    borderRadius: 12, 
+    paddingHorizontal: 20,
+    borderRadius: 12,
     alignItems: 'center',
     marginBottom: 15,
-    shadowColor: '#1E88E5',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    flexDirection: 'row',
+    elevation: 3,
   },
   actionButtonText: {
-    color: 'white',
+    color: 'black',
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 10,
   },
 });

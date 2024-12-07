@@ -1,4 +1,4 @@
-# Yunis Apartment and Site Management Solutions - Project Phases
+# Aparthus Apartment and Site Management Solutions - Project Phases
 
 ## Phase 1: Project Setup and Infrastructure
 - Defining project requirements.
@@ -28,7 +28,7 @@
 - **Deployment**: Publishing the final version for mobile and web platforms.
 
 ---
-# Yunis Site Yönetim Çözümleri - Proje Aşamaları
+# Aparthus Site Yönetim Çözümleri - Proje Aşamaları
 
 ## Faz 1: Proje Tanımlama ve Altyapı
 - Proje gereksinimlerinin belirlenmesi.

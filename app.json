@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "yunis-site-yonetim",
-    "slug": "yunis-site-yonetim",
+    "name": "aparthus-site-yonetim",
+    "slug": "aparthus-site-yonetim",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,10 +18,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.observerdev.aparthussiteyonetim"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8f858511-3861-4fc7-a5dd-2e946c3bf33f"
+      }
     }
   }
 }

@@ -1,76 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Text, StyleSheet, View, TouchableOpacity, Alert } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import axios from 'axios';
+import Header from './components/Header';
+import CameraSection from './components/CameraSection';
+import QRCodeResultModal from './components/QRCodeResultModal';
+import InputSection from './components/InputSection';
+import { Camera } from 'expo-camera';
 
-export const QRCodeScannerScreen = () => {
-  const [hasPermission, requestPermission] = useCameraPermissions(); // Kamera izni kontrolü
+export default function QRCodeScannerScreen() {
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
+  const [qrData, setQrData] = useState<string>('');
+  const [inputText, setInputText] = useState<string>('');
+  const [visitorStatus, setVisitorStatus] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  // QR kod tarama işlemi
-  const handleBarCodeScanned = ({ data }: { data: string }) => {
+  React.useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === 'granted');
+    })();
+  }, []);
+
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
-    Alert.alert('QR Kod Taranan Veri', `Ziyaretçi Bilgisi: ${data}`, [
-      { text: 'Tamam', onPress: () => setScanned(false) }, // Yeniden taramak için
-    ]);
+    setQrData(data);
+    const isRegistered = await checkQRCode(data);
+    setVisitorStatus(isRegistered ? "Kayıtlı Ziyaretçi" : "Bilinmeyen Ziyaretçi");
+    setModalVisible(true);
   };
 
-  // Kamera izni yükleniyor
-  if (!hasPermission) {
-    return <Text>Kamera izni yükleniyor...</Text>;
-  }
+  const checkQRCode = async (qrCode: string): Promise<boolean> => {
+    try {
+      const response = await axios.post('https://aparthus-api.vercel.app/api/qr-routes/check-qr', { qrCode });
+      return response.data.isRegistered;
+    } catch (error) {
+      console.error("QR kod kontrol edilirken hata oluştu:", error);
+      return false;
+    }
+  };
 
-  // Kamera izni verilmediyse
-  if (!hasPermission.granted) {
-    return (
-      <View style={styles.container}>
-        <Text>Kamerayı kullanabilmek için izin gerekiyor.</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
-          <Text style={styles.buttonText}>İzin Ver</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const saveQRCode = async () => {
+    try {
+      const response = await axios.post('https://aparthus-api.vercel.app/api/qr-routes/save-qr', {
+        qrCode: inputText,
+        visitorName: 'Ziyaretçi Adı'
+      });
+      console.log('QR kod kaydedildi:', response.data.message);
+    } catch (error) {
+      console.error("QR kod kaydedilemedi:", error);
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.cameraContainer}>
-        <CameraView
-          style={StyleSheet.absoluteFillObject}
-          barcodeScannerSettings={{
-            barcodeTypes: ['qr'], // Sadece QR kodları tara
-          }}
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned} // Taranan veri
-        />
-      </View>
-      {scanned && (
-        <TouchableOpacity style={styles.button} onPress={() => setScanned(false)}>
-          <Text style={styles.buttonText}>Yeniden Tara</Text>
-        </TouchableOpacity>
-      )}
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Header title="Ziyaretçi Yönetim Paneli" />
+      <CameraSection scanned={scanned} onScanned={handleBarCodeScanned} />
+      <QRCodeResultModal
+        visible={modalVisible}
+        visitorStatus={visitorStatus}
+        qrData={qrData}
+        onClose={() => setModalVisible(false)}
+      />
+      <InputSection inputText={inputText} setInputText={setInputText} saveQRCode={saveQRCode} />
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cameraContainer: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: 'black',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF', padding: 16 }
 });

@@ -1,25 +1,85 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 
-const paymentData = [
-  { id: '1', month: 'Ocak', amount: 500, status: 'Ödendi' },
-  { id: '2', month: 'Şubat', amount: 500, status: 'Ödenmedi' },
-  { id: '3', month: 'Mart', amount: 500, status: 'Ödenmedi' },
-  { id: '4', month: 'Nisan', amount: 500, status: 'Ödenmedi' },
-];
+interface Payment {
+  id: string;
+  amount: number;
+  status: string;
+  dueDate: string;
+}
 
 export const AidatPaymentScreen = () => {
-  const [payments, setPayments] = useState(paymentData);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const handlePay = (id: string) => {
-    Alert.alert(
-      'Ödeme Onayı',
-      'Bu aidatı ödemek istediğinizden emin misiniz?',
-      [
-        { text: 'Hayır', style: 'cancel' },
-        { text: 'Evet', onPress: () => markAsPaid(id) }
-      ]
-    );
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const residentId = await AsyncStorage.getItem('residentId');
+        if (!residentId) {
+          Alert.alert('Hata', 'Kullanıcı ID bulunamadı.');
+          setLoading(false);
+          return;
+        }
+  
+        const response = await fetch(`https://aparthus-api.vercel.app/api/residents/payments/${residentId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setPayments([{
+            id: data._id,
+            amount: data.amountDue,
+            status: data.hasPaid ? 'Ödendi' : 'Ödenmedi',
+            dueDate: new Date(data.dueDate).toLocaleDateString('tr-TR'),
+          }]);
+        } else {
+          Alert.alert('Hata', 'Ödeme verileri alınırken bir sorun oluştu.');
+        }
+      } catch (error) {
+        console.error('Veri çekme hatası:', error);
+        Alert.alert('Hata', 'Veri çekme sırasında bir hata oluştu.');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchPayments();
+  }, []);  
+
+  const handlePay = async (id: string, amount: number) => {
+    try {
+      const residentId = await AsyncStorage.getItem('residentId');
+      if (!residentId) {
+        Alert.alert('Hata', 'Kullanıcı ID bulunamadı.');
+        return;
+      }
+
+      const response = await fetch('https://aparthus-api.vercel.app/api/residents/payAidat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          residentId, 
+          amount,
+        }),
+      });
+
+      if (response.ok) {
+        markAsPaid(id);
+        Alert.alert('Başarılı', 'Aidat ödemeniz başarıyla yapıldı!');
+      } else {
+        Alert.alert('Hata', 'Aidat ödeme başarısız oldu.');
+      }
+    } catch (error) {
+      Alert.alert('Hata', 'Aidat ödeme sırasında bir hata oluştu.');
+    }
   };
 
   const markAsPaid = (id: string) => {
@@ -29,42 +89,32 @@ export const AidatPaymentScreen = () => {
     setPayments(updatedPayments);
   };
 
-  const renderPaymentItem = ({ item }: { item: { id: string; month: string; amount: number; status: string } }) => (
-    <View style={styles.paymentCard}>
-      <Text style={styles.paymentText}>Ay: {item.month}</Text>
-      <Text style={styles.paymentText}>Tutar: {item.amount} TL</Text>
-      <Text style={[styles.paymentText, item.status === 'Ödenmedi' ? styles.unpaid : styles.paid]}>
-        Durum: {item.status}
-      </Text>
-      {item.status === 'Ödenmedi' && (
-        <TouchableOpacity style={styles.payButton} onPress={() => handlePay(item.id)}>
-          <Text style={styles.buttonText}>Öde</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const getTotalPaid = () => payments.filter(payment => payment.status === 'Ödendi').reduce((sum, payment) => sum + payment.amount, 0);
-  const getTotalUnpaid = () => payments.filter(payment => payment.status === 'Ödenmedi').reduce((sum, payment) => sum + payment.amount, 0);
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Summary Cards */}
-      <View style={styles.summaryContainer}>
-        <View style={[styles.summaryCard, styles.activeCard]}>
-          <Text style={styles.cardTitle}>Ödenen</Text>
-          <Text style={styles.cardAmount}>{getTotalPaid()} TL</Text>
-        </View>
-        <View style={[styles.summaryCard, styles.passiveCard]}>
-          <Text style={styles.cardTitle}>Ödenmeyen</Text>
-          <Text style={styles.cardAmount}>{getTotalUnpaid()} TL</Text>
-        </View>
-      </View>
-
-      {/* Aidat Listesi */}
       <FlatList
         data={payments}
-        renderItem={renderPaymentItem}
+        renderItem={({ item }) => (
+          <View style={styles.paymentCard}>
+            <Text style={styles.amountText}>Tutar: {item.amount} TL</Text>
+            <Text style={styles.dueDateText}>Son Ödeme Tarihi: {item.dueDate}</Text>
+            <Text style={[styles.statusText, item.status === 'Ödenmedi' ? styles.overdue : styles.paid]}>
+              Durum: {item.status}
+            </Text>
+            {item.status === 'Ödenmedi' && (
+              <TouchableOpacity style={styles.payButton} onPress={() => handlePay(item.id, item.amount)}>
+                <Text style={styles.payButtonText}>Öde</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
         keyExtractor={(item) => item.id}
       />
     </SafeAreaView>
@@ -74,17 +124,14 @@ export const AidatPaymentScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: 'white',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
+    backgroundColor: '#F5F5F5',
   },
   paymentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'white',
     marginHorizontal: 10,
+    marginVertical: 10,
     padding: 20,
-    borderRadius: 12, 
+    borderRadius: 12,
     marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -92,71 +139,35 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  paymentText: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: 'black', 
-    fontWeight: 'semibold',
-  },
-  payButton: {
-    backgroundColor: 'gold', 
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: 'gold',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  buttonText: {
-    color: 'black',
+  amountText: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
+  },
+  dueDateText: {
+    fontSize: 14,
+    color: '#777',
+  },
+  statusText: {
+    fontSize: 16,
+    marginVertical: 10,
+  },
+  overdue: {
+    color: 'red',
   },
   paid: {
     color: 'green',
-    fontWeight: 'bold',
   },
-  unpaid: {
-    color: 'red',
-    fontWeight: 'bold',
-  },
-  // Summary Cards
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    marginBottom: 20,
-  },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: 'white',
-    padding: 25,
-    borderRadius: 12, 
-    marginHorizontal: 5,
+  payButton: {
+    backgroundColor: 'gold',
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: 'center',
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
   },
-  activeCard: {
-    borderColor: 'green',
-    borderWidth: 1,
-  },
-  passiveCard: {
-    borderColor: 'red', 
-    borderWidth: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-    marginBottom: 10,
-  },
-  cardAmount: {
-    fontSize: 26,
+  payButtonText: {
+    color: 'white',
     fontWeight: 'bold',
   },
 });
+
+export default AidatPaymentScreen;
