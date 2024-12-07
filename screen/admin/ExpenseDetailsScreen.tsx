@@ -148,12 +148,14 @@ export const ExpenseDetailsScreen = () => {
       'Tüm ödemeyen sakinlere hatırlatma gönderilsin mi?',
       [
         { text: 'İptal', style: 'cancel' },
-        { text: 'Evet', onPress: () => {
-          unpaidResidents.forEach(resident => {
-            console.log(`Toplu hatırlatma gönderiliyor: ${resident.firstName} ${resident.lastName}`);
-            sendPaymentReminder(resident);
-          });
-        }},
+        {
+          text: 'Evet', onPress: () => {
+            unpaidResidents.forEach(resident => {
+              console.log(`Toplu hatırlatma gönderiliyor: ${resident.firstName} ${resident.lastName}`);
+              sendPaymentReminder(resident);
+            });
+          }
+        },
       ]
     );
   };
@@ -167,71 +169,71 @@ export const ExpenseDetailsScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-  <ScrollView contentContainerStyle={styles.container}>
-    {/* Başlık */}
-    <Text style={styles.title}>Aidat ve Gider Detayları</Text>
 
-    {/* Özet Bölümü */}
-    <View style={styles.summaryContainer}>
-      <Text style={styles.summaryText}>
-        Toplam Ödenen Aidat: <Text style={styles.paidAmount}>{totalPaid} ₺</Text>
-      </Text>
-      <Text style={styles.summaryText}>
-        Toplam Ödenmeyen Aidat: <Text style={styles.unpaidAmount}>{totalUnpaid} ₺</Text>
-      </Text>
-    </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>Aidat ve Gider Detayları</Text>
 
-    {/* Ödenmemiş Faturalar Butonu */}
-    <TouchableOpacity style={styles.unpaidButton} onPress={() => Alert.alert('Ödenmemiş Faturalar')}>
-      <Text style={styles.unpaidButtonText}>Ödenmemiş Faturalar</Text>
-    </TouchableOpacity>
+        {/* Toplam ödenen ve ödenmeyen aidat miktarlarını gösteren özet bölüm */}
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryText}>Toplam Ödenen Aidat: <Text style={styles.paidAmount}>{totalPaid} ₺</Text></Text>
+          <Text style={styles.summaryText}>Toplam Ödenmeyen Aidat: <Text style={styles.unpaidAmount}>{totalUnpaid} ₺</Text></Text>
+        </View>
 
-    {/* Aidat Talep Durumu */}
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Aidat Talep Durumu</Text>
-      <FlatList
-        data={residents}
-        renderItem={({ item }) => (
-          <ResidentCard
-            key={item._id}
-            resident={item}
-            onRequestPayment={requestPaymentReminder}
-            onShowDetails={showResidentDetails}
-            onCall={() => Alert.alert('Aranıyor', `${item.contactNumber}`)}
+        {/* Ödenmemiş faturaları görmek için buton */}
+        <TouchableOpacity style={styles.unpaidButton} onPress={() => Alert.alert('Ödenmemiş Faturalar')}>
+          <Text style={styles.unpaidButtonText}>Ödenmemiş Faturalar</Text>
+        </TouchableOpacity>
+
+        {/* Aidat talep durumu bölümünü gösteren liste */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Aidat Talep Durumu</Text>
+          <FlatList
+            data={residents}
+            renderItem={({ item }) => (
+              <ResidentCard
+                key={item._id}
+                resident={{ ...item, id: item._id }} // `id` alanını manuel olarak atıyoruz
+                onRequestPayment={requestPaymentReminder}
+                onShowDetails={showResidentDetails}
+                onCall={() => Alert.alert('Aranıyor', `${item.contactNumber}`)}
+              />
+
+            )}
+            keyExtractor={(item) => item._id}
           />
-        )}
-        keyExtractor={(item) => item._id}
-      />
-    </View>
+        </View>
 
-    {/* Toplu Hatırlatma Gönder Butonu */}
-    <TouchableOpacity style={styles.bulkReminderButton} onPress={sendBulkReminders}>
-      <Text style={styles.bulkReminderText}>🔔 Toplu Hatırlatma Gönder 🔔</Text>
-    </TouchableOpacity>
+        {/* Tüm ödemeyenlere toplu hatırlatma gönderme butonu */}
+        <TouchableOpacity style={styles.bulkReminderButton} onPress={sendBulkReminders}>
+          <Text style={styles.bulkReminderText}>🔔 Toplu Hatırlatma Gönder 🔔</Text>
+        </TouchableOpacity>
 
-    {/* Gider Detayları */}
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Gider Detayları</Text>
-      {expenses.length === 0 ? (
-        <Text style={styles.noExpensesText}>Herhangi bir gider bulunmamaktadır.</Text>
-      ) : (
-        <FlatList
-          data={expenses}
-          renderItem={({ item }) => <ExpenseCard expense={item} />}
-          keyExtractor={(item) => item.id}
+        {/* Gider detaylarını gösteren liste */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Gider Detayları</Text>
+          {expenses.length === 0 ? (
+            <Text style={{ textAlign: 'center', marginVertical: 20 }}>Herhangi bir gider bulunmamaktadır.</Text>
+          ) : (
+            <FlatList
+              data={expenses}
+              renderItem={({ item }) => <ExpenseCard expense={item} />}
+              keyExtractor={(item) => item.id}
+            />
+          )}
+        </View>
+
+        {/* Sakin detaylarını gösteren modal */}
+        <ResidentDetailsModal
+          resident={selectedResident}
+          isVisible={isModalVisible}
+          onClose={() => {
+            console.log('Sakin detayları modalı kapatıldı');
+            setIsModalVisible(false);
+          }}
+          onCall={(phoneNumber) => Alert.alert('Aranıyor', `${phoneNumber}`)}
         />
-      )}
-    </View>
-
-    {/* Sakin Detayları Modal */}
-    <ResidentDetailsModal
-      resident={selectedResident}
-      isVisible={isModalVisible}
-      onClose={() => setIsModalVisible(false)}
-      onCall={(phoneNumber) => Alert.alert('Aranıyor', `${phoneNumber}`)}
-    />
-  </ScrollView>
-</SafeAreaView>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -300,12 +302,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: 'black',
-  },
-  noExpensesText: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 16,
-    marginTop: 20,
   },
   bulkReminderButton: {
     backgroundColor: '#FF7043',

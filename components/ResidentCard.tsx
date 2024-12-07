@@ -21,7 +21,7 @@ export const ResidentCard: React.FC<ResidentCardProps> = ({ resident, onRequestP
         { text: 'İptal', style: 'cancel' },
         { text: 'Onayla', onPress: () => {
             console.log('Aidat talebi onaylandı');
-            onRequestPayment(resident); // Aidat talebi onaylandığında onRequestPayment fonksiyonunu çağır
+            onRequestPayment(resident);
           }
         },
       ]
@@ -39,7 +39,7 @@ export const ResidentCard: React.FC<ResidentCardProps> = ({ resident, onRequestP
         { text: 'İptal', style: 'cancel' },
         { text: 'Ara', onPress: () => {
             console.log('Arama onaylandı');
-            onCall(resident.contactNumber); // Arama onaylandığında onCall fonksiyonunu çağır
+            onCall(resident.contactNumber);
           }
         },
       ]
@@ -51,26 +51,26 @@ export const ResidentCard: React.FC<ResidentCardProps> = ({ resident, onRequestP
       {/* Resident detaylarını göstermek için tıklanabilir alan */}
       <TouchableOpacity onPress={() => {
         console.log('Detaylar gösteriliyor:', resident);
-        onShowDetails(resident); // Detayları göstermek için onShowDetails fonksiyonunu çağır
+        onShowDetails(resident);
       }} style={styles.detailsContainer}>
         <Text style={styles.residentText} numberOfLines={1}>
-          {resident.firstName} {resident.lastName} {/* Resident ismi ve soyismi */}
+          {resident.firstName} {resident.lastName}
         </Text>
         <Text style={resident.hasPaid ? styles.paidText : styles.unpaidText}>
-          {resident.amountDue} ₺ {resident.hasPaid && <Text style={styles.paidLabel}>(Ödendi)</Text>} {/* Borç ve ödeme durumu */}
+          {resident.amountDue} ₺ {resident.hasPaid && <Text style={styles.paidLabel}>(Ödendi)</Text>}
         </Text>
       </TouchableOpacity>
 
       {/* Butonlar için alan */}
       <View style={styles.buttonsContainer}>
-        {/* Eğer aidat ödenmemişse ve borç varsa aidat talep et butonunu göster */}
+        {/* Aidat Talep Butonu */}
         {!resident.hasPaid && resident.amountDue > 0 && (
           <TouchableOpacity onPress={handleRequestPayment} style={styles.requestButton}>
             <Text style={styles.requestButtonText}>Aidat Talep Et</Text>
           </TouchableOpacity>
         )}
 
-        {/* Arama butonu */}
+        {/* Arama Butonu */}
         <TouchableOpacity onPress={handleCall} style={styles.callButton}>
           <Text style={styles.callButtonText}>Ara</Text>
         </TouchableOpacity>
@@ -128,7 +128,6 @@ const styles = StyleSheet.create({
   requestButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center',
   },
   callButton: {
     backgroundColor: 'green',
@@ -141,6 +140,5 @@ const styles = StyleSheet.create({
   callButtonText: {
     color: 'white',
     fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
