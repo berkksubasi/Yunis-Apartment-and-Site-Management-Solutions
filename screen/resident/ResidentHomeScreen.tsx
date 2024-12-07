@@ -1,4 +1,3 @@
-// ResidentHomeScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -45,7 +44,7 @@ export const ResidentHomeScreen: React.FC = () => {
   }, []);
 
   const handleAidatPayment = () => {
-    navigation.navigate('AidatPayment');
+    navigation.navigate('AidatPayment'); 
   };
 
   const handleReportIssue = () => {

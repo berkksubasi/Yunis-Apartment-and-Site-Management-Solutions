@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
+import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
 interface AdminHomeScreenProps {
   name: string;
@@ -15,10 +15,10 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
 
   // Kullanıcı adını AsyncStorage'dan çek
   useEffect(() => {
+
     console.log('useEffect çağrıldı, kullanıcı verileri alınıyor...');
     const getUserData = async () => {
       try {
-        // AsyncStorage'dan 'user' verisini al
         const userData = await AsyncStorage.getItem('user');
         console.log('AsyncStorage den dönen ham değer:', userData);
 
@@ -34,10 +34,9 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
           }
         } else {
           console.log('Kullanıcı verileri bulunamadı.');
-        }
-      } catch (error) {
-        console.error('Kullanıcı verileri alınamadı:', error);
-      }
+    const getUserData = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('user');
     };
 
     getUserData();
