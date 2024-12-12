@@ -12,14 +12,25 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.observerdev.aparthussiteyonetim",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Kamera, QR kod taraması ve fotoğraf çekmek için kullanılacaktır.",
+        "NSLocationWhenInUseUsageDescription": "Konum bilgisi, size en yakın hizmetleri göstermek için kullanılacaktır.",
+        "NSMicrophoneUsageDescription": "Mikrofon, sesli mesaj kaydetmek için kullanılacaktır."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.observerdev.aparthussiteyonetim"
+      "package": "com.observerdev.aparthussiteyonetim",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
