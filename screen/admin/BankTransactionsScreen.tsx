@@ -8,12 +8,19 @@ const BankTransactionsScreen = () => {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const response = await fetch('https://aparthus-api.vercel.app/api/transactions'); // Banka hareketleri API'sini güncelleyin.
+        const response = await fetch('https://aparthus-api.vercel.app/api/transactions'); // API adresinizi kontrol edin.
         const contentType = response.headers.get('content-type');
 
         if (response.ok && contentType?.includes('application/json')) {
           const data = await response.json();
-          setTransactions(data);
+
+          // Gelen verinin doğruluğunu kontrol et
+          if (Array.isArray(data) && data.every(item => item.id && item.date && item.description && item.amount !== undefined)) {
+            setTransactions(data);
+          } else {
+            console.log('Gelen veri formatı beklenmiyor:', data);
+            Alert.alert('Hata', 'Sunucudan beklenmeyen veri formatı alındı.');
+          }
         } else {
           const errorText = await response.text();
           console.log('Beklenmeyen yanıt:', errorText);
@@ -32,7 +39,14 @@ const BankTransactionsScreen = () => {
     <View style={styles.transactionItem}>
       <Text style={styles.transactionDate}>{item.date}</Text>
       <Text style={styles.transactionDescription}>{item.description}</Text>
-      <Text style={styles.transactionAmount}>{item.amount} ₺</Text>
+      <Text
+        style={[
+          styles.transactionAmount,
+          { color: item.amount >= 0 ? 'green' : 'red' }, // Dinamik renk
+        ]}
+      >
+        {item.amount >= 0 ? `+${item.amount} ₺` : `${item.amount} ₺`}
+      </Text>
     </View>
   );
 
@@ -43,8 +57,10 @@ const BankTransactionsScreen = () => {
         <FlatList
           data={transactions}
           renderItem={renderTransaction}
-          keyExtractor={(item) => item.id} // Benzersiz anahtar tanımlaması
-          ListEmptyComponent={<Text style={styles.emptyText}>Henüz banka hareketi yok.</Text>}
+          keyExtractor={(item) => item.id} // Benzersiz anahtar
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Henüz banka hareketi yok.</Text>
+          }
         />
       </View>
     </SafeAreaView>
@@ -86,10 +102,11 @@ const styles = StyleSheet.create({
   transactionDescription: {
     fontSize: 14,
     color: '#333',
+    marginBottom: 5,
   },
   transactionAmount: {
     fontSize: 14,
-    color: 'green', // Yeşil renk
+    fontWeight: 'bold',
   },
   emptyText: {
     textAlign: 'center',

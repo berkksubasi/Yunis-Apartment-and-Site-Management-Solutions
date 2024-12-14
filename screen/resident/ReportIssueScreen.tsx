@@ -1,41 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Animated, FlatList } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Animated, FlatList, ActivityIndicator } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const issueCategories = [
-  { label: 'Asansör Arızası', value: 'elevator' },
-  { label: 'Su Kesintisi', value: 'water' },
-  { label: 'Elektrik Sorunu', value: 'electric' },
-  { label: 'Isıtma Sorunu', value: 'heating' },
-  { label: 'Temizlik', value: 'cleaning' },
+  { label: 'Asansör Arızası', value: 'Asansör Arızası' },
+  { label: 'Su Kesintisi', value: 'Su Kesintisi' },
+  { label: 'Elektrik Sorunu', value: 'Elektrik Sorunu' },
+  { label: 'Isıtma Sorunu', value: 'Isıtma Sorunu' },
+  { label: 'Temizlik', value: 'Temizlik' },
+];
+
+const issueStatuses = [
+  { label: 'Açık', value: 'Açık' },
+  { label: 'Çözüldü', value: 'Çözüldü' },
 ];
 
 type Issue = {
-  _id: string;
+  _id?: string;
+  id?: string;
+  title: string;
   category: string;
   description: string;
-  image?: string;
+  status: string;
 };
 
 export const ReportIssueScreen = () => {
   const [issueCategory, setIssueCategory] = useState<string | null>(null);
   const [issueDescription, setIssueDescription] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const scaleAnim = new Animated.Value(1);
 
   useEffect(() => {
     const fetchIssues = async () => {
-      console.log('Sorunlar yükleniyor...');
       try {
         const response = await axios.get('https://aparthus-api.vercel.app/api/issues/getAllIssues');
         if (response.status === 200) {
-          setIssues(response.data.issues);
-          console.log('Sorunlar başarıyla yüklendi:', response.data.issues);
+          const issueData = Array.isArray(response.data) ? response.data : [];
+          setIssues(issueData);
         }
       } catch (error) {
         console.error('Sorunları yükleme sırasında hata oluştu:', error);
@@ -45,86 +50,75 @@ export const ReportIssueScreen = () => {
     fetchIssues();
   }, []);
 
-  const handlePickImage = async () => {
-    console.log('Resim seçici açılıyor...');
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setSelectedImage(result.assets[0].uri);
-      console.log('Seçilen resim URI:', result.assets[0].uri);
-    }
-  };
-
   const handleReportIssue = async () => {
-    console.log('Sorun bildiriliyor...');
-    if (!issueCategory) {
-      Alert.alert('Hata', 'Lütfen bir sorun kategorisi seçin.');
-      console.log('Hata: Sorun kategorisi seçilmedi.');
+    if (!issueCategory || !issueDescription.trim()) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
       return;
     }
 
-    if (!issueDescription.trim()) {
-      Alert.alert('Hata', 'Lütfen sorunun açıklamasını girin.');
-      console.log('Hata: Sorun açıklaması boş.');
-      return;
-    }
-
+    setLoading(true);
     try {
-      // AsyncStorage'den residentId'yi dinamik olarak al
       const residentId = await AsyncStorage.getItem('residentId');
-      console.log("Resident ID:", residentId);
-
-      // ObjectId formatında olup olmadığını kontrol et
       if (!residentId || residentId.length !== 24) {
-        Alert.alert('Hata', 'Geçerli bir kullanıcı kimliği bulunamadı. Lütfen tekrar oturum açın.');
+        Alert.alert('Hata', 'Geçerli bir kullanıcı kimliği bulunamadı.');
+        setLoading(false);
         return;
-      } 
-
-      console.log('Sorun Kategorisi:', issueCategory);
-      console.log('Sorun Açıklaması:', issueDescription);
-      console.log('Seçilen Resim:', selectedImage ? selectedImage : 'Resim seçilmedi');
-
-      const formData = new FormData();
-      formData.append('residentId', residentId); // `residentId` eklendi
-      formData.append('category', issueCategory);
-      formData.append('description', issueDescription);
-
-      if (selectedImage) {
-        formData.append('image', {
-          uri: selectedImage,
-          type: 'image/jpeg',
-          name: 'issue_image.jpg',
-        } as any);
-        console.log('Form verisine resim eklendi');
       }
 
-      console.log('API isteği gönderiliyor...');
-      const response = await axios.post('https://aparthus-api.vercel.app/api/issues/reportIssues', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const requestData = {
+        residentId,
+        title: 'Sorun Başlığı',
+        category: issueCategory,
+        description: issueDescription,
+        status: 'Açık',
+      };
 
-      console.log('API yanıt durumu:', response.status);
+      const response = await axios.post(
+        'https://aparthus-api.vercel.app/api/issues/reportIssues',
+        requestData
+      );
 
       if (response.status === 201) {
+        const newIssue = response.data.issue || requestData;
         Alert.alert('Başarılı', 'Sorununuz başarıyla bildirildi.');
         setIssueCategory(null);
         setIssueDescription('');
-        setSelectedImage(null);
-        setIssues((prevIssues) => [...prevIssues, response.data.issue]);
-        console.log('Sorun başarıyla bildirildi ve listeye eklendi.');
-      } else {
-        Alert.alert('Hata', 'Sorun bildirimi başarısız oldu. Lütfen tekrar deneyin.');
-        console.log('API yanıt durumu başarısız:', response.status);
+        setIssues((prevIssues) => [...prevIssues, newIssue]);
       }
     } catch (error: any) {
       Alert.alert('Hata', 'Sorun bildirimi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-      console.error('Sorun bildirimi sırasında hata oluştu:', error);
-      console.error('Hata Mesajı:', error.message);
-      console.error('Hata Yanıt Verisi:', error.response ? error.response.data : 'Yanıt verisi yok');
-      console.error('Hata Yapılandırması:', error.config);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteIssue = async (id: string) => {
+    setLoading(true);
+    try {
+      await axios.delete(`https://aparthus-api.vercel.app/api/issues/deleteIssue/${id}`);
+      setIssues((prevIssues) => prevIssues.filter((issue) => issue._id !== id));
+      Alert.alert('Başarılı', 'Sorun başarıyla silindi.');
+    } catch (error) {
+      Alert.alert('Hata', 'Sorun silinirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    setLoading(true);
+    try {
+      const updatedIssue = await axios.put(`https://aparthus-api.vercel.app/api/issues/updateIssue/${id}`, { status: newStatus });
+      setIssues((prevIssues) =>
+        prevIssues.map((issue) =>
+          issue._id === id ? { ...issue, status: updatedIssue.data.status } : issue
+        )
+      );
+      Alert.alert('Başarılı', 'Durum başarıyla güncellendi.');
+    } catch (error) {
+      Alert.alert('Hata', 'Durum güncellenirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -156,26 +150,43 @@ export const ReportIssueScreen = () => {
           onChangeText={setIssueDescription}
           multiline
         />
-        <TouchableOpacity style={styles.imagePickerButton} onPress={handlePickImage} activeOpacity={0.8}>
-          <Ionicons name="camera-outline" size={22} color="#3B82F6" style={styles.icon} />
-          <Text style={styles.imagePickerText}>Fotoğraf Ekle</Text>
-        </TouchableOpacity>
-        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
         <Animated.View style={[styles.buttonContainer, { transform: [{ scale: scaleAnim }] }]}>
           <TouchableOpacity style={styles.button} onPress={handleReportIssue} onPressIn={onPressIn} onPressOut={onPressOut} activeOpacity={0.9}>
             <Text style={styles.buttonText}>Bildir</Text>
           </TouchableOpacity>
         </Animated.View>
-        <FlatList
-          data={issues}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <View style={styles.issueItem}>
-              <Text style={styles.issueCategory}>{item.category}</Text>
-              <Text style={styles.issueDescription}>{item.description}</Text>
-            </View>
-          )}
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#FFA500" />
+        ) : issues.length === 0 ? (
+          <Text style={styles.emptyText}>Henüz bildirilen bir sorun yok.</Text>
+        ) : (
+          <FlatList
+            data={issues}
+            keyExtractor={(item, index) => item._id || item.id || index.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.issueItem}>
+                <Text style={styles.issueCategory}>{item.category}</Text>
+                <Text style={styles.issueDescription}>{item.description}</Text>
+                <RNPickerSelect
+                  onValueChange={(value) => handleUpdateStatus(item._id || '', value || '')}
+                  value={item.status}
+                  items={issueStatuses}
+                  useNativeAndroidPickerStyle={false}
+                  style={{
+                    inputAndroid: styles.statusPicker,
+                    inputIOS: styles.statusPicker,
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteIssue(item._id || '')}
+                >
+                  <Text style={styles.deleteButtonText}>Sil</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -190,16 +201,16 @@ const styles = StyleSheet.create({
   pickerIcon: { right: 10, marginTop: 10, alignItems: 'flex-end' },
   input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, padding: 15, fontSize: 16, backgroundColor: 'white', color: '#1F2937', marginBottom: 20 },
   textArea: { height: 100, textAlignVertical: 'top' },
-  imagePickerButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFF6FF', paddingVertical: 12, paddingHorizontal: 15, borderRadius: 12, width: '100%', marginBottom: 20, shadowColor: '#93C5FD', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 3 },
-  icon: { marginRight: 10 },
-  imagePickerText: { color: '#3B82F6', fontSize: 16, fontWeight: '500' },
-  image: { width: '100%', height: 200, borderRadius: 12, marginBottom: 20 },
   buttonContainer: { width: '100%', alignItems: 'center' },
   button: { backgroundColor: '#fdd700', paddingVertical: 15, borderRadius: 12, alignItems: 'center', width: '100%', shadowColor: '#3B82F6', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4 },
   buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 },
-  issueItem: { padding: 15, backgroundColor: '#ffffff', borderRadius: 12, marginBottom: 15, borderColor: '#D1D5DB', borderWidth: 1 },
+  emptyText: { textAlign: 'center', fontSize: 16, color: '#9CA3AF', marginTop: 20 },
+  issueItem: { padding: 15, backgroundColor: '#ffffff', borderRadius: 12, marginTop: 10, marginBottom: 15, borderColor: '#D1D5DB', borderWidth: 1 },
   issueCategory: { fontSize: 16, fontWeight: 'bold', color: '#1f2937', marginBottom: 5 },
   issueDescription: { fontSize: 14, color: '#4B5563' },
+  statusPicker: {backgroundColor: '#f3f4f6',borderRadius: 8,marginVertical: 8,paddingHorizontal: 12,paddingVertical: 8,},
+  deleteButton: {backgroundColor: '#ef4444',borderRadius: 8,paddingVertical: 8,marginTop: 8,alignItems: 'center',},
+  deleteButtonText: {color: 'white',fontWeight: 'bold',},
 });
 
 export default ReportIssueScreen;

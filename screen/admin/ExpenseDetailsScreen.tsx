@@ -113,12 +113,20 @@ export const ExpenseDetailsScreen = () => {
 
   // Belirli bir sakine ödeme hatırlatması gönderen fonksiyon (API isteği yapar)
   const sendPaymentReminder = async (resident: Resident) => {
-    console.log(`Ödeme hatırlatması gönderiliyor: ${resident.id}`);
+    console.log(`Ödeme hatırlatması gönderiliyor: ${resident._id}`);
+    
+    // Borcu olmayanlara hatırlatma göndermeyin
+    if (resident.amountDue === 0) {
+      console.log(`${resident.firstName} ${resident.lastName} borcu olmadığı için hatırlatma gönderilmiyor.`);
+      Alert.alert('Bilgi', `${resident.firstName} ${resident.lastName} borcu olmadığı için hatırlatma gönderilmiyor.`);
+      return;
+    }
+  
     try {
-      const response = await fetch(`https://aparthus-api.vercel.app/api/residents/${resident.id}/reminder`, {
+      const response = await fetch(`https://aparthus-api.vercel.app/api/residents/${resident._id}/reminder`, {
         method: 'POST',
       });
-
+  
       if (response.ok) {
         console.log(`Ödeme hatırlatması başarıyla gönderildi: ${resident.firstName} ${resident.lastName}`);
         Alert.alert('Hatırlatma Gönderildi', `${resident.firstName} ${resident.lastName} için aidat hatırlatması gönderildi.`);
@@ -131,17 +139,22 @@ export const ExpenseDetailsScreen = () => {
       Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamadı.');
     }
   };
+  
 
   // Ödeme yapmayan tüm sakinlere toplu hatırlatma gönderen fonksiyon
   const sendBulkReminders = () => {
     console.log('Toplu hatırlatma gönderme işlemi başlatılıyor...');
-    const unpaidResidents = residents.filter(resident => !resident.hasPaid);
+  
+    // Borcu olmayan sakinleri filtrele
+    const unpaidResidents = residents.filter(resident => !resident.hasPaid && resident.amountDue > 0);
+  
     // Eğer ödemeyen sakin yoksa kullanıcıya bilgi ver
     if (unpaidResidents.length === 0) {
-      console.log('Tüm sakinler ödemelerini yapmış.');
-      Alert.alert('Bilgi', 'Tüm sakinler ödemelerini yapmış.');
+      console.log('Tüm sakinler ödemelerini yapmış veya borcu yok.');
+      Alert.alert('Bilgi', 'Tüm sakinler ödemelerini yapmış veya borcu yok.');
       return;
     }
+  
     // Kullanıcıya tüm ödemeyen sakinlere hatırlatma göndermek isteyip istemediğini sor
     Alert.alert(
       'Toplu Hatırlatma',
@@ -149,7 +162,8 @@ export const ExpenseDetailsScreen = () => {
       [
         { text: 'İptal', style: 'cancel' },
         {
-          text: 'Evet', onPress: () => {
+          text: 'Evet',
+          onPress: () => {
             unpaidResidents.forEach(resident => {
               console.log(`Toplu hatırlatma gönderiliyor: ${resident.firstName} ${resident.lastName}`);
               sendPaymentReminder(resident);
@@ -159,6 +173,7 @@ export const ExpenseDetailsScreen = () => {
       ]
     );
   };
+  
 
   // Belirli bir sakinin detaylarını gösteren modalı açan fonksiyon
   const showResidentDetails = (resident: Resident) => {

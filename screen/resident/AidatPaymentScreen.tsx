@@ -12,6 +12,7 @@ interface Payment {
 export const AidatPaymentScreen = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -22,24 +23,28 @@ export const AidatPaymentScreen = () => {
           setLoading(false);
           return;
         }
-  
+
         const response = await fetch(`https://aparthus-api.vercel.app/api/residents/payments/${residentId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-  
+
         if (response.ok) {
           const data = await response.json();
-          setPayments([{
-            id: data._id,
-            amount: data.amountDue,
-            status: data.hasPaid ? 'Ödendi' : 'Ödenmedi',
-            dueDate: new Date(data.dueDate).toLocaleDateString('tr-TR'),
-          }]);
+          setPayments([
+            {
+              id: data._id,
+              amount: data.amountDue || 0,
+              status: data.amountDue === 0 ? 'Borcu Yok' : data.hasPaid ? 'Ödendi' : 'Ödenmedi',
+              dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString('tr-TR') : 'Belirtilmemiş',
+            },
+          ]);
         } else {
-          Alert.alert('Hata', 'Ödeme verileri alınırken bir sorun oluştu.');
+          const errorData = await response.json();
+          console.error('Ödeme verisi hatası:', errorData);
+          Alert.alert('Hata', errorData.message || 'Ödeme verileri alınırken bir sorun oluştu.');
         }
       } catch (error) {
         console.error('Veri çekme hatası:', error);
@@ -48,11 +53,13 @@ export const AidatPaymentScreen = () => {
         setLoading(false);
       }
     };
-  
+
     fetchPayments();
-  }, []);  
+  }, []);
 
   const handlePay = async (id: string, amount: number) => {
+    setProcessingPaymentId(id);
+
     try {
       const residentId = await AsyncStorage.getItem('residentId');
       if (!residentId) {
@@ -66,25 +73,57 @@ export const AidatPaymentScreen = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          residentId, 
+          residentId,
           amount,
         }),
       });
 
       if (response.ok) {
+        await updatePaymentInDatabase(residentId, id); // Veritabanını güncelle
         markAsPaid(id);
         Alert.alert('Başarılı', 'Aidat ödemeniz başarıyla yapıldı!');
       } else {
-        Alert.alert('Hata', 'Aidat ödeme başarısız oldu.');
+        const errorData = await response.json();
+        console.error('Aidat ödeme hatası:', errorData);
+        Alert.alert('Hata', errorData.message || 'Aidat ödeme başarısız oldu.');
       }
     } catch (error) {
+      console.error('Aidat ödeme sırasında hata:', error);
       Alert.alert('Hata', 'Aidat ödeme sırasında bir hata oluştu.');
+    } finally {
+      setProcessingPaymentId(null);
+    }
+  };
+
+  const updatePaymentInDatabase = async (residentId: string, paymentId: string) => {
+    try {
+      const response = await fetch(`https://aparthus-api.vercel.app/api/residents/updatePayment`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          residentId,
+          paymentId,
+          amountDue: 0, // Borcu sıfırla
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Veritabanı güncellenemedi:', errorData);
+        throw new Error(errorData.message || 'Veritabanı güncellenemedi');
+      }
+
+      console.log('Veritabanı başarıyla güncellendi');
+    } catch (error) {
+      console.error('Veritabanı güncelleme hatası:', error);
     }
   };
 
   const markAsPaid = (id: string) => {
-    const updatedPayments = payments.map(payment =>
-      payment.id === id ? { ...payment, status: 'Ödendi' } : payment
+    const updatedPayments = payments.map((payment) =>
+      payment.id === id ? { ...payment, status: 'Ödendi', amount: 0 } : payment
     );
     setPayments(updatedPayments);
   };
@@ -109,8 +148,12 @@ export const AidatPaymentScreen = () => {
               Durum: {item.status}
             </Text>
             {item.status === 'Ödenmedi' && (
-              <TouchableOpacity style={styles.payButton} onPress={() => handlePay(item.id, item.amount)}>
-                <Text style={styles.payButtonText}>Öde</Text>
+              <TouchableOpacity
+                style={[styles.payButton, processingPaymentId === item.id && { backgroundColor: '#d3d3d3' }]}
+                onPress={() => handlePay(item.id, item.amount)}
+                disabled={processingPaymentId === item.id}
+              >
+                <Text style={styles.payButtonText}>{processingPaymentId === item.id ? 'Ödeniyor...' : 'Öde'}</Text>
               </TouchableOpacity>
             )}
           </View>
