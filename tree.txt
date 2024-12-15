@@ -2,15 +2,6 @@
 ├── App.tsx
 ├── QRCodeScannerScreen.tsx
 ├── README.md
-├── api
-│   ├── createUser.js
-│   ├── models
-│   │   └── User.js
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── routes
-│   │   └── user.js
-│   └── server.js
 ├── app.json
 ├── assets
 │   ├── adaptive-icon.png
@@ -20,10 +11,15 @@
 │   └── splash.png
 ├── babel.config.js
 ├── components
+│   ├── CameraSection.tsx
 │   ├── ExpenseCard.tsx
+│   ├── Header.tsx
+│   ├── InputSection.tsx
 │   ├── LoginButton.tsx
+│   ├── QRCodeResultModal.tsx
 │   ├── ResidentCard.tsx
 │   └── ResidentDetailsModal.tsx
+├── eas.json
 ├── env.d.ts
 ├── package-lock.json
 ├── package.json
@@ -33,9 +29,13 @@
 │   ├── admin
 │   │   ├── AdminHomeScreen.tsx
 │   │   ├── AnnouncementScreen.tsx
+│   │   ├── BankTransactionsScreen.tsx
 │   │   ├── ExpenseDetailsScreen.tsx
 │   │   ├── ManageUsersScreen.tsx
-│   │   └── SendNotificationScreen.tsx
+│   │   ├── ResidentDetailsScreen.tsx
+│   │   ├── SendNotificationScreen.tsx
+│   │   ├── TaskTrackingScreen.tsx
+│   │   └── UserManagementScreen.tsx
 │   └── resident
 │       ├── AidatPaymentScreen.tsx
 │       ├── EmergencyReportScreen.tsx
@@ -44,7 +44,6 @@
 │       └── VisitorManagementScreen.tsx
 ├── tree.txt
 ├── tsconfig.json
-├── types.ts
-└── yarn.lock
+└── types.ts
 
-9 directories, 39 files
+6 directories, 41 files

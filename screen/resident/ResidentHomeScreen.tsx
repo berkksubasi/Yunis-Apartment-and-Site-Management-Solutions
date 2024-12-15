@@ -3,7 +3,6 @@ import { SafeAreaView, View, Text, FlatList, TouchableOpacity, StyleSheet, Image
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Announcement {
   message: string;
