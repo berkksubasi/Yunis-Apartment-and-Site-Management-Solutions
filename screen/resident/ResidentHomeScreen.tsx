@@ -3,6 +3,7 @@ import { SafeAreaView, View, Text, FlatList, TouchableOpacity, StyleSheet, Image
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Announcement {
   message: string;
@@ -48,32 +49,11 @@ export const ResidentHomeScreen: React.FC = () => {
   };
 
   const handleReportIssue = () => {
-    navigation.navigate('ReportIssue'); // `ReportIssueScreen`'e yönlendirir
+    navigation.navigate('ReportIssue');
   };
 
-  const handleEmergencyReport = async () => {
-    try {
-      const response = await fetch('https://aparthus-api.vercel.app/api/residents/emergencyReport', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          residentId: 'resident_id',
-          emergencyType: 'fire',
-          description: 'Emergency description',
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        Alert.alert('Başarılı', 'Acil durum bildiriminiz gönderildi.');
-      } else {
-        Alert.alert('Hata', data.message || 'Acil durum bildirimi başarısız oldu.');
-      }
-    } catch (error) {
-      console.error('Acil durum bildirimi hatası:', error);
-      Alert.alert('Hata', 'Acil durum bildirimi sırasında bir hata oluştu.');
-    }
+  const handleEmergencyReport = () => {
+    navigation.navigate('EmergencyReport'); // EmergencyReportScreen'e yönlendirin
   };
 
   const renderAnnouncement = ({ item }: { item: Announcement }) => (

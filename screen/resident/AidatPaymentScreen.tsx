@@ -37,7 +37,7 @@ export const AidatPaymentScreen = () => {
             {
               id: data._id,
               amount: data.amountDue || 0,
-              status: data.amountDue === 0 ? 'Borcu Yok' : data.hasPaid ? 'Ödendi' : 'Ödenmedi',
+              status: data.amountDue === 0 ? 'Borcunuz Bulunmamaktadır' : data.hasPaid ? 'Ödendi' : 'Ödenmedi',
               dueDate: data.dueDate ? new Date(data.dueDate).toLocaleDateString('tr-TR') : 'Belirtilmemiş',
             },
           ]);

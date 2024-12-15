@@ -1,6 +1,6 @@
 {
-  "name": "aparthus-site-yonetim",
-  "version": "1.0.0",
+  "name": "Aparthus",
+  "version": "1.0.1",
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",

@@ -80,7 +80,7 @@ export default function App() {
                   options={{ title: 'Aidat Ödemeleri' }}
                 />
                 <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ title: 'Sorun Bildir' }} />
-                <Stack.Screen name="EmergencyReport" component={EmergencyReportScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="EmergencyReport" component={EmergencyReportScreen} options={{ title: 'Acil Durum Bildir' }} />
               </>
             )}
 

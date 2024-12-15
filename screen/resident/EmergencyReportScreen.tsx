@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -10,20 +11,49 @@ export const EmergencyReportScreen = () => {
   const [priorityLevel, setPriorityLevel] = useState(''); 
   const [description, setDescription] = useState(''); 
 
-  const handleSendEmergencyReport = () => {
+  const handleSendEmergencyReport = async () => {
     if (emergencyType === '' || priorityLevel === '') {
       Alert.alert('Hata', 'Lütfen tüm zorunlu alanları doldurun.');
       return;
     }
 
-    const emergencyReport = emergencyType === 'Diğer' ? customEmergency : emergencyType;
-    const reportDetails = {
-      type: emergencyReport,
-      priority: priorityLevel,
-      description: description,
-    };
+    const residentId = await AsyncStorage.getItem('residentId');
+    if (!residentId) {
+      Alert.alert('Hata', 'Kullanıcı ID bulunamadı.');
+      return;
+    }
 
-    Alert.alert('Başarılı', `Acil durum bildiriminiz başarıyla gönderildi`);
+    const emergencyReport = emergencyType === 'Diğer' ? customEmergency : emergencyType;
+
+    try {
+      const response = await fetch('https://aparthus-api.vercel.app/api/emergency/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          residentId,
+          emergencyType: emergencyReport,
+          priorityLevel,
+          description,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        Alert.alert('Başarılı', 'Acil durum bildiriminiz başarıyla gönderildi.');
+        setEmergencyType('');
+        setCustomEmergency('');
+        setPriorityLevel('');
+        setDescription('');
+      } else {
+        console.error('API Hatası:', data);
+        Alert.alert('Hata', data.message || 'Acil durum bildirimi başarısız oldu.');
+      }
+    } catch (error) {
+      console.error('Acil durum bildirimi sırasında hata oluştu:', error);
+      Alert.alert('Hata', 'Acil durum bildirimi sırasında bir hata oluştu.');
+    }
   };
 
   return (
@@ -37,6 +67,7 @@ export const EmergencyReportScreen = () => {
               selectedValue={priorityLevel}
               onValueChange={(itemValue) => setPriorityLevel(itemValue)}
             >
+              <Picker.Item label="Seçiniz" value="" />
               <Picker.Item label="Yeşil Kod (Düşük)" value="Yeşil Kod" />
               <Picker.Item label="Sarı Kod (Orta)" value="Sarı Kod" />
               <Picker.Item label="Kırmızı Kod (Yüksek)" value="Kırmızı Kod" />
@@ -50,6 +81,7 @@ export const EmergencyReportScreen = () => {
               selectedValue={emergencyType}
               onValueChange={(itemValue) => setEmergencyType(itemValue)}
             >
+              <Picker.Item label="Seçiniz" value="" />
               <Picker.Item label="Yangın" value="Yangın" />
               <Picker.Item label="Su Baskını" value="Su Baskını" />
               <Picker.Item label="Deprem" value="Deprem" />
@@ -166,3 +198,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default EmergencyReportScreen;
