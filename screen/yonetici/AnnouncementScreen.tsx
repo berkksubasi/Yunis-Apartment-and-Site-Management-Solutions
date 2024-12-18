@@ -5,7 +5,7 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Aler
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AnnouncementScreenProps {
-  onAddAnnouncement: (announcement: string) => void; // Duyuru eklemek için kullanılan bir prop
+  onAddAnnouncement: (announcement: string) => void; 
 }
 
 export const AnnouncementScreen: React.FC<AnnouncementScreenProps> = ({ onAddAnnouncement }) => {
@@ -42,19 +42,19 @@ export const AnnouncementScreen: React.FC<AnnouncementScreenProps> = ({ onAddAnn
 
   // Dosya seçme işlemi
   const handleFilePick = async () => {
-    console.log('Dosya seçme işlemi başlatıldı.');
-    try {
-      const res = await DocumentPicker.getDocumentAsync({ type: '*/*' }); // Herhangi bir türde dosya seç
-      if (res.type === 'success') {
-        console.log('Dosya başarıyla seçildi:', res.name);
-        setSelectedFile({ name: res.name || 'Seçilen dosya', uri: res.uri }); // Dosya bilgilerini state'e kaydet
-      } else {
-        console.log('İşlem iptal edildi.');
-      }
-    } catch (err) {
-      console.error('Belge seçme sırasında hata oluştu:', err);
+  console.log('Dosya seçme işlemi başlatıldı.');
+  try {
+    const res = await DocumentPicker.getDocumentAsync({ type: '*/*' }); // Herhangi bir türde dosya seç
+    if (!res.canceled) {
+      console.log('Dosya başarıyla seçildi:', res.file.name);
+      setSelectedFile({ name: res.file.name || 'Seçilen dosya', uri: res.file.uri }); // Dosya bilgilerini state'e kaydet
+    } else {
+      console.log('İşlem iptal edildi.');
     }
-  };
+  } catch (err) {
+    console.error('Belge seçme sırasında hata oluştu:', err);
+  }
+};
 
   // Duyuru gönderme işlemi
   const handleSendAnnouncement = async () => {
@@ -71,7 +71,7 @@ export const AnnouncementScreen: React.FC<AnnouncementScreenProps> = ({ onAddAnn
       return;
     }
 
-    // onAddAnnouncement prop'unu çağırıyoruz
+    // onAddAnnouncement prop'unu çağır
     console.log('onAddAnnouncement çağrılıyor.');
     onAddAnnouncement(message);
 
@@ -121,7 +121,7 @@ export const AnnouncementScreen: React.FC<AnnouncementScreenProps> = ({ onAddAnn
           value={message}
           onChangeText={(text) => {
             console.log('Duyuru metni güncelleniyor:', text);
-            setMessage(text); // Duyuru metnini güncelle
+            setMessage(text); 
           }}
           multiline
         />

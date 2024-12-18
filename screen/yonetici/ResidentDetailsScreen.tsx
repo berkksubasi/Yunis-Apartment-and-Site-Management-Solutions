@@ -34,7 +34,7 @@ const ResidentDetailsScreen: React.FC<ResidentDetailsProps> = ({ resident, onClo
           <Text style={styles.closeButtonText}>Geri</Text>
         </TouchableOpacity>
         <Image
-          source={{ uri: 'https://via.placeholder.com/150' }} // Kullanıcı fotoğrafı için yer tutucu
+          source={{ uri: 'https://via.placeholder.com/150' }}
           style={styles.image}
         />
         <Text style={styles.name}>{resident.firstName} {resident.lastName}</Text>
@@ -50,7 +50,7 @@ const ResidentDetailsScreen: React.FC<ResidentDetailsProps> = ({ resident, onClo
           <Text style={styles.detailText}>{resident.contactNumber}</Text>
           <Text style={styles.detailTitle}>E-Posta Adresi</Text>
           <Text style={styles.detailText}>{resident.email}</Text>
-          <Text style={styles.detailTitle}>Bağlı Kullanıcı</Text>
+          <Text style={styles.detailTitle}>Kullanıcı Adı</Text>
           <Text style={styles.detailText}>{resident.username}</Text>
         </View>
       </View>
@@ -61,7 +61,7 @@ const ResidentDetailsScreen: React.FC<ResidentDetailsProps> = ({ resident, onClo
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5', // Açık gri arka plan
+    backgroundColor: '#f5f5f5', 
     padding: 20,
   },
   container: {
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'gold', 
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 25, // Yuvarlatılmış kenarlar
+    borderRadius: 25,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   closeButtonText: {
-    color: 'black', // Beyaz metin
+    color: 'black', 
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 20,
     borderWidth: 3,
-    borderColor: '#FFD700', // Gold çerçeve rengi
+    borderColor: '#FFD700', 
   },
   name: {
     fontSize: 28,
@@ -106,10 +106,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statementButton: {
-    backgroundColor: '#FFD700', // Gold
+    backgroundColor: '#FFD700',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 25, // Yuvarlatılmış kenarlar
+    borderRadius: 25, 
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   statementButtonText: {
-    color: '#000', // Siyah
+    color: '#000', 
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderColor: '#ddd', // Açık gri kenar
+    borderColor: '#ddd', 
     marginTop: 20,
   },
   detailTitle: {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 16,
-    color: '#555', // Daha koyu gri
+    color: '#555', 
     marginBottom: 10,
   },
 });

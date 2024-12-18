@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, FlatList, Alert, Modal, TouchableOpacity, Image } from 'react-native';
 import { Resident } from '../../types';
-import ResidentDetailsScreen from './ResidentDetailsScreen'; // İlgili ekranı import edin
+import ResidentDetailsScreen from './ResidentDetailsScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const UserManagementScreen = () => {
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -11,12 +12,26 @@ export const UserManagementScreen = () => {
   useEffect(() => {
     const fetchResidents = async () => {
       try {
-        const response = await fetch('https://aparthus-api.vercel.app/api/residents');
+        // Token'ı AsyncStorage'den al
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          Alert.alert('Hata', 'Yetkilendirme hatası: Token bulunamadı.');
+          return;
+        }
+
+        const response = await fetch('https://aparthus-api.vercel.app/api/residents/yonetici-residents', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, 
+          },
+        });
+
         const contentType = response.headers.get('content-type');
 
         if (response.ok && contentType?.includes('application/json')) {
           const data = await response.json();
-          setResidents(data);
+          setResidents(data); 
         } else {
           const errorText = await response.text();
           console.log('Beklenmeyen yanıt:', errorText);
@@ -30,7 +45,6 @@ export const UserManagementScreen = () => {
 
     fetchResidents();
   }, []);
-
   const renderResident = ({ item }: { item: Resident }) => (
     <TouchableOpacity
       style={styles.residentItem}
@@ -41,7 +55,7 @@ export const UserManagementScreen = () => {
     >
       <View style={styles.residentInfo}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/150' }} // Kullanıcı fotoğrafı için yer tutucu
+          source={{ uri: 'https://via.placeholder.com/150' }} 
           style={styles.residentImage}
         />
         <View style={styles.residentDetails}>

@@ -8,7 +8,7 @@ export const SendNotificationScreen = () => {
 
   const handleSendAnnouncement = async () => {
     try {
-      console.log("Duyuru gönderiliyor:", { message, block, scheduledAt }); // İstek öncesi log
+      console.log("Duyuru gönderiliyor:", { message, block, scheduledAt });
       const response = await fetch('https://aparthus-api.vercel.app/api/announcements', {
         method: 'POST',
         headers: {
@@ -23,14 +23,14 @@ export const SendNotificationScreen = () => {
       });
   
       if (response.ok) {
-        console.log('Başarılı yanıt:', await response.json()); // Başarılı yanıt log
+        console.log('Başarılı yanıt:', await response.json()); 
         Alert.alert('Başarılı', 'Duyuru başarıyla gönderildi!');
       } else {
-        console.log('Başarısız yanıt:', await response.text()); // Başarısız yanıt log
+        console.log('Başarısız yanıt:', await response.text()); 
         Alert.alert('Hata', 'Duyuru gönderilirken bir hata oluştu.');
       }
     } catch (error) {
-      console.log('Bağlantı hatası:', error); // Hata log
+      console.log('Bağlantı hatası:', error); 
       Alert.alert('Bağlantı Hatası', 'Sunucuya ulaşılamadı.');
     }
   };

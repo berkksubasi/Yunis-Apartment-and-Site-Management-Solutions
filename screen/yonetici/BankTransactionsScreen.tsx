@@ -57,7 +57,7 @@ const BankTransactionsScreen = () => {
         <FlatList
           data={transactions}
           renderItem={renderTransaction}
-          keyExtractor={(item) => item.id} // Benzersiz anahtar
+          keyExtractor={(item) => item.id} // Unique anahtar
           ListEmptyComponent={
             <Text style={styles.emptyText}>Henüz banka hareketi yok.</Text>
           }

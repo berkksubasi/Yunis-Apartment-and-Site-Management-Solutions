@@ -1,6 +1,7 @@
 export type RootStackParamList = {
   Login: undefined;
-  AdminHome: undefined;
+  Register: undefined;
+  YoneticiHome: undefined;
   ManageUsers: undefined; 
   UserManagement: undefined; 
   ExpenseDetails: undefined; 
@@ -19,7 +20,7 @@ export type RootStackParamList = {
 export interface LoginScreenProps {
   username: string;
   password: string;
-  setrole: (role: 'admin' | 'resident' | 'security') => void;
+  setrole: (role: 'yonetici' | 'resident' | 'security') => void;
 }
 
 export interface Resident {
@@ -37,7 +38,7 @@ export interface Resident {
   username: string;
   email: string;
   password: string;
-  isAdmin: boolean;
+  isYonetici: boolean;
   isBlocked: boolean;
   isVerified: boolean;
   createdAt: string;

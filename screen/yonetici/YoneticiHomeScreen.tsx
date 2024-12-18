@@ -5,43 +5,45 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../types';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
-interface AdminHomeScreenProps {
+interface YoneticiHomeScreenProps {
   name: string;
 }
 
-export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
-  const [username, setUsername] = useState<string>(''); // Kullanıcı adını boş bir string olarak başlat
+export const YoneticiHomeScreen: React.FC<YoneticiHomeScreenProps> = () => {
+  const [username, setUsername] = useState<string>(''); 
+  const [firstName, setFirstName] = useState<string>('');
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  // Kullanıcı adını AsyncStorage'dan çek
-  useEffect(() => {
-    console.log('useEffect çağrıldı, kullanıcı verileri alınıyor...');
-    const getUserData = async () => {
-      try {
-        // AsyncStorage'dan 'user' verisini al
-        const userData = await AsyncStorage.getItem('user');
-        console.log('AsyncStorage den dönen ham değer:', userData);
+useEffect(() => {
+  console.log('useEffect çağrıldı, kullanıcı verileri alınıyor...');
+  const getUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      console.log('AsyncStorage den dönen ham değer:', userData);
 
-        if (userData) {
-          const user = JSON.parse(userData);
-          console.log('JSON parse sonrası kullanıcı verileri:', user);
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log('JSON parse sonrası kullanıcı verileri:', user);
 
-          if (user?.username) {
-            setUsername(user.username); // Kullanıcı adını ayarla
-            console.log('Kullanıcı adı ayarlandı:', user.username);
-          } else {
-            console.log('Kullanıcı adında bir hata var ya da eksik.');
-          }
-        } else {
-          console.log('Kullanıcı verileri bulunamadı.');
+        if (user?.username) {
+          setUsername(user.username);
+          console.log('Kullanıcı adı ayarlandı:', user.username);
         }
-      } catch (error) {
-        console.error('Kullanıcı verileri alınamadı:', error);
+        if (user?.firstName) {
+          setFirstName(user.firstName);
+          console.log('Yönetici adı ayarlandı:', user.firstName);
+        }
+      } else {
+        console.log('Kullanıcı verileri bulunamadı.');
       }
-    };
+    } catch (error) {
+      console.error('Kullanıcı verileri alınamadı:', error);
+    }
+  };
 
-    getUserData();
-  }, []);
+  getUserData();
+}, []);
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -52,19 +54,11 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
           style={styles.logo}
         />
         <Text style={styles.welcomeText}>
-          {username ? `Merhaba ${username}, Hoşgeldiniz!` : 'Merhaba, Hoşgeldiniz!'}
+          {firstName ? `Merhaba ${firstName}, Hoşgeldin!` : 'Merhaba, Hoşgeldiniz!'}
         </Text>
       </View>
       {/* Ana işlem butonları bölümü */}
       <View style={styles.container}>
-        {/* Kullanıcıları Yönet butonu */}
-        <TouchableOpacity style={styles.actionButton} onPress={() => {
-          console.log('Kullanıcıları Yönet butonuna tıklandı');
-          navigation.navigate('ManageUsers');
-        }}>
-          <FontAwesome5 name="users-cog" size={24} color="white" />
-          <Text style={styles.actionButtonText}>Kullanıcıları Yönet</Text>
-        </TouchableOpacity>
         {/* Sakinleri Görüntüle butonu */}
         <TouchableOpacity style={styles.actionButton} onPress={() => {
           console.log('Sakinleri Görüntüle butonuna tıklandı');
@@ -111,19 +105,18 @@ export const AdminHomeScreen: React.FC<AdminHomeScreenProps> = () => {
           navigation.navigate('QRCodeScanner');
         }}>
           <MaterialIcons name="qr-code-scanner" size={24} color="white" />
-          <Text style={styles.actionButtonText}>QR Kod ile Ziyaretçi Girişi</Text>
+          <Text style={styles.actionButtonText}>Ziyaretçi Girişi</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
 
-// Stil dosyaları, SafeAreaView ve butonlar için gerekli stiller
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'white',
+    paddingTop: 30,
   },
   header: {
     backgroundColor: 'white',

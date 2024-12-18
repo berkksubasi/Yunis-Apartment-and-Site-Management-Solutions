@@ -20,7 +20,7 @@ const TaskTrackingScreen: React.FC = () => {
       assignedTo: null,
       status: 'İnceleniyor',
       date: '24 Ağu 2022',
-      icon: 'https://via.placeholder.com/50',  // Yer tutucu ikon
+      icon: 'https://via.placeholder.com/50',  
     },
     {
       id: '2',
@@ -29,7 +29,7 @@ const TaskTrackingScreen: React.FC = () => {
       assignedTo: null,
       status: 'Bekleyen',
       date: '22 Ağu 2022',
-      icon: 'https://via.placeholder.com/50',  // Yer tutucu ikon
+      icon: 'https://via.placeholder.com/50', 
     },
   ]);
 

@@ -8,7 +8,7 @@
 - **Authentication**: JWT for user authentication.
 
 ## Phase 2: Development of Panels
-- **Admin Panel**: User and visitor management, announcements, and fee tracking.
+- **Yonetici Panel**: User and visitor management, announcements, and fee tracking.
 - **Resident Panel**: Payment, visitor management, and issue reporting.
 - **Security Panel**: Visitor entry/exit tracking via QR code.
 
@@ -38,7 +38,7 @@
 - **Authentication**: JWT ile kullanıcı doğrulama.
 
 ## Faz 2: Panellerin Geliştirilmesi
-- **Admin Paneli**: Kullanıcı ve ziyaretçi yönetimi, duyuru ve aidat takibi.
+- **Yonetici Paneli**: Kullanıcı ve ziyaretçi yönetimi, duyuru ve aidat takibi.
 - **Resident Paneli**: Aidat ödeme, ziyaretçi yönetimi ve sorun bildirme.
 - **Security Paneli**: QR kod ile ziyaretçi giriş-çıkış takibi.
 

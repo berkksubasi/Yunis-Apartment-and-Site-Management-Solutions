@@ -26,8 +26,8 @@
 ├── screen
 │   ├── LoginScreen.tsx
 │   ├── SecurityHomeScreen.tsx
-│   ├── admin
-│   │   ├── AdminHomeScreen.tsx
+│   ├── yonetici
+│   │   ├── YoneticiHomeScreen.tsx
 │   │   ├── AnnouncementScreen.tsx
 │   │   ├── BankTransactionsScreen.tsx
 │   │   ├── ExpenseDetailsScreen.tsx

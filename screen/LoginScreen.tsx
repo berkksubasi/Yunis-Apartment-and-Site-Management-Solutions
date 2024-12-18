@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, Alert, Image, ActivityIndicator, Text } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -7,7 +8,7 @@ import { LoginButton } from '../components/LoginButton';
 import { RootStackParamList } from '../types';
 
 interface LoginScreenProps {
-  setrole: (role: 'admin' | 'resident' | 'security') => void;
+  setrole: (role: 'yonetici' | 'resident' | 'security') => void;
 }
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -15,108 +16,57 @@ type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'
 export const LoginScreen: React.FC<LoginScreenProps> = ({ setrole }) => {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'yonetici' | 'resident'>('yonetici'); // Rol seçimi
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
     console.log('handleLogin çağrıldı');
     setLoading(true);
-    console.log('Loading durumu true olarak ayarlandı');
-
+  
     if (!usernameOrEmail || !password) {
-      console.log('Kullanıcı adı veya e-posta ve şifre gereklidir');
       Alert.alert('Hata', 'Kullanıcı adı veya e-posta ve şifre gereklidir.');
       setLoading(false);
-      console.log('Loading durumu false olarak ayarlandı');
       return;
     }
-
+  
     try {
-      const isResident = !usernameOrEmail.includes('@');
-      console.log(`isResident: ${isResident}`);
-
-      const loginEndpoint = isResident
-        ? 'https://aparthus-api.vercel.app/api/residents/login'
-        : 'https://aparthus-api.vercel.app/api/login';
-      console.log(`Login endpoint: ${loginEndpoint}`);
-
-      const requestBody = isResident
-        ? { username: usernameOrEmail, password }
-        : { email: usernameOrEmail, password };
+      const requestBody = { usernameOrEmail, password };
+  
       console.log('Request Body:', requestBody);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      const response = await fetch(loginEndpoint, {
+  
+      const response = await fetch('https://aparthus-api.vercel.app/api/users/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
-        signal: controller.signal,
       });
-      clearTimeout(timeoutId);
-      console.log('Yanıt alındı');
-
-      const contentType = response.headers.get("content-type");
-      console.log(`Content type: ${contentType}`);
-
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        console.log('Yanıt verisi:', data);
-
-        if (response.ok) {
-          const role = data.role || data.resident?.role;
-          const residentId = data.resident?._id;
-          console.log(`Rol: ${role}, Resident ID: ${residentId}`);
-
-          if (role) {
-            await AsyncStorage.setItem('user', JSON.stringify({ role }));
-            console.log("Rol AsyncStorage'a kaydedildi");
-            if (residentId) {
-              await AsyncStorage.setItem('residentId', residentId);
-              console.log("Resident ID AsyncStorage'a kaydedildi");
-            }
-            setrole(role);
-            console.log(`Rol ayarlandı: ${role}`);
-
-            if (role === 'resident') {
-              console.log("ResidentHome'a yönlendiriliyor");
-              navigation.navigate('ResidentHome');
-            } else if (role === 'admin') {
-              console.log("AdminHome'a yönlendiriliyor");
-              navigation.navigate('AdminHome');
-            } else if (role === 'security') {
-              console.log("SecurityHome'a yönlendiriliyor");
-              navigation.navigate('SecurityHome');
-            }
-          } else {
-            console.error('Sunucudan beklenmeyen yanıt alındı:', data);
-            Alert.alert('Hata', 'Sunucudan beklenmeyen yanıt alındı.');
-          }
-        } else {
-          console.error('Hatalı giriş:', data.message || 'Giriş başarısız.');
-          Alert.alert('Hatalı giriş', data.message || 'Giriş başarısız.');
-        }
-      } else {
-        console.error("Beklenmeyen yanıt formatı:", await response.text());
-        Alert.alert("Hata", "Sunucudan geçersiz formatta yanıt alındı.");
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        console.error('Hatalı giriş:', data.message || 'Giriş başarısız.');
+        Alert.alert('Hatalı giriş', data.message || 'Giriş başarısız.');
+        return;
       }
+  
+      console.log('Yanıt verisi:', data);
+  
+      // Token ve kullanıcı bilgilerini AsyncStorage'e kaydet
+      await AsyncStorage.multiSet([
+        ['token', data.token],
+        ['user', JSON.stringify(data.user)],
+      ]);
+  
+      setrole(data.role);
+      navigation.navigate(data.role === 'yonetici' ? 'YoneticiHome' : 'ResidentHome');
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error('İstek zaman aşımına uğradı:', error);
-        Alert.alert('Bağlantı hatası', 'İstek zaman aşımına uğradı, lütfen tekrar deneyin.');
-      } else {
-        console.error('Bağlantı hatası:', error);
-        Alert.alert('Bağlantı hatası', 'Sunucuya ulaşılamıyor.');
-      }
+      console.error('Bağlantı hatası:', error.message || error);
+      Alert.alert('Bağlantı hatası', 'Sunucuya ulaşılamıyor.');
     } finally {
       setLoading(false);
-      console.log('Loading durumu false olarak ayarlandı');
     }
   };
-
+  
   return (
     <View style={styles.container}>
       <Image source={require('../assets/logo.png')} style={styles.logo} />
@@ -135,46 +85,40 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ setrole }) => {
         onChangeText={setPassword}
         placeholderTextColor="#8A8A8A"
       />
+      <Text style={styles.label}>Rol Seçin:</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={role}
+          onValueChange={(itemValue) => setRole(itemValue)}
+          style={styles.pickerItem}
+        >
+          <Picker.Item label="Yönetici" value="yonetici" />
+          <Picker.Item label="Sakin" value="resident" />
+        </Picker>
+      </View>
+
+
       <View style={styles.buttonContainer}>
         {loading ? (
           <ActivityIndicator size="large" color="#FFFFFF" />
         ) : (
           <LoginButton title="Giriş Yap" onPress={handleLogin} />
         )}
+        <Text style={styles.registerText} onPress={() => navigation.navigate('Register')}>
+          Kaydol
+        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center', 
-    padding: 20, 
-    backgroundColor: 'black',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 400, 
-    height: 200,
-    marginBottom: 20,
-    alignSelf: 'center',
-    resizeMode: 'contain',
-  },
-  input: {
-    height: 50, 
-    borderColor: '#E0E0E0',
-    borderWidth: 1, 
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 20, 
-    backgroundColor: '#FFFFFF',
-    fontSize: 16, 
-    color: '#333',
-    width: '100%',
-  },
-  buttonContainer: {
-    width: '100%',
-    alignSelf: 'center',
-  },
+  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: 'black', alignItems: 'center' },
+  logo: { width: 400, height: 200, marginBottom: 20, resizeMode: 'contain' },
+  input: { height: 50, borderColor: '#E0E0E0', borderWidth: 1, borderRadius: 8, paddingHorizontal: 15, marginBottom: 20, backgroundColor: '#FFFFFF', width: '100%', color: '#333' },
+  pickerContainer: { width: '100%', height: 50, borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 8, overflow: 'hidden', marginBottom: 20, backgroundColor: '#FFFFFF', },
+  pickerItem: { height: 50, borderColor: '#E0E0E0', borderWidth: 1, borderRadius: 8, paddingHorizontal: 15, marginBottom: 20, backgroundColor: '#FFFFFF', width: '100%', color: '#333' },
+  label: { color: '#FFFFFF', fontSize: 12, paddingBlockStart: 10, marginBottom: 10, textAlign: 'left', alignSelf: 'flex-start' },
+  buttonContainer: { width: '100%', alignSelf: 'center', marginTop: 20 },
+  registerText: { marginTop: 15, color: '#FFFFFF', fontSize: 16, textAlign: 'center', textDecorationLine: 'underline' },
 });
